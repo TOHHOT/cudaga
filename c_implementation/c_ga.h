@@ -15,6 +15,8 @@
 
 #define GENE_LENGTH 4
 
+#define GENE_BYTES 40
+
 typedef struct {
 	unsigned char gene[(CHROMO_LENGTH / GENE_LENGTH)];
 	int fitness;
