@@ -5,6 +5,8 @@
 
 #define NUM_OFFSPRING 2
 
+#define NUM_INDIVIDUALS (NUM_THREADS * NUM_OFFSPRING)
+
 #define END_FITNESS 999
 
 #define MAX_GENERATIONS 3000
@@ -20,9 +22,11 @@ typedef struct {
 
 void run_ga(struct chromo *pool);
 
-int insert_roulette(chromo *pool, chromo *locals);
+int insert_roulette(chromo *pool, chromo *locals, chromo *parents);
 
 int insert(chromo *pool, chromo *locals);
+
+int roulette(chromo *pool, chromo *parents, int sum);
 
 int create_individual(chromo *parents, chromo *child);
 
