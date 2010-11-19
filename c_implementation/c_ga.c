@@ -12,16 +12,13 @@ void print_complete(chromo *pool)
 {
 	int numElements = 0;
 	unsigned char buffer[2 * GENE_BYTES];
-	int i,j;
+	int i;
 
 	for (i = 0; i < NUM_INDIVIDUALS; i++) {
 		numElements = parseBits(pool[i].bits, buffer);
 		if (pool[i].fitness >= END_FITNESS) {
 			break;
 		} else {
-			for (j = 0; j < numElements; j++) {
-				printf("%d ", buffer[j]);
-			}
 			printf("%d\n", pool[i].fitness);
 		}
 	}
@@ -69,7 +66,6 @@ void run_ga(chromo *pool)
         calc_fitness(pool + i);
         sum += pool[i].fitness;
     }
-	return;
 
     printf("               ");
     for (i = 0; i < MAX_GENERATIONS; i++) {
@@ -286,40 +282,44 @@ int parseBits(unsigned char* bits, unsigned char* buffer)
 	for (i = 0; i < GENE_BYTES; i++) {
 		temp = (bits[i] & 0x0F);
 		if (isOperator) {
-			if ((temp < 10) || (temp > 13))
-				continue;
-			else {
+			if (!((temp < 10) || (temp > 13))) {
+			//if ((temp < 10) || (temp > 13))
+			//	continue;
+			//else {
 				isOperator = 0;
 				buffer[index++] = temp;
-				continue;
+			//	continue;
 			}
 		} else {
-			if (temp > 9)
-				continue;
-			else {
+			if (!(temp > 9)) {
+			//if (temp > 9)
+			//	continue;
+			//else {
 				isOperator = 1;
 				buffer[index++] = temp;
-				continue;
+			//	continue;
 			}
 		}
 		// Now do it again for the other half of this char
 		temp = (bits[i] & 0xF0) >> 4;
 		if (isOperator) {
-			if ((temp < 10) || (temp > 13))
-				continue;
-			else {
+			if (!((temp < 10) || (temp > 13))) {
+			//if ((temp < 10) || (temp > 13))
+			//	continue;
+			//else {
 				isOperator = 0;
 				buffer[index++] = temp;
-				continue;
+			//	continue;
 			}
 		}
 		else {
-			if (temp > 9)
-				continue;
-			else {
+			if (!(temp > 9)) {
+			//if (temp > 9)
+			//	continue;
+			//else {
 				isOperator = 1;
 				buffer[index++] = temp;
-				continue;
+			//	continue;
 			}
 		}
 	}
