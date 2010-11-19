@@ -7,22 +7,26 @@
 
 #define NUM_INDIVIDUALS (NUM_THREADS * NUM_OFFSPRING)
 
-#define END_FITNESS 999
+#define END_FITNESS 9999
 
 #define MAX_GENERATIONS 3000
 
-#define CHOMO_LENGTH 300
+#define CHROMO_LENGTH 300
 
 #define GENE_LENGTH 4
 
 #define GENE_BYTES 40
 
+#define TARGET_VALUE 42.0f
+
 typedef struct {
-	unsigned char gene[(CHROMO_LENGTH / GENE_LENGTH)];
+	unsigned char bits[(CHROMO_LENGTH / (2 * GENE_LENGTH))];
 	int fitness;
 } chromo;
 
-void run_ga(struct chromo *pool);
+void run_ga(chromo *pool);
+
+void print_complete(chromo *pool);
 
 int insert_roulette(chromo *pool, chromo *locals, chromo *parents);
 
