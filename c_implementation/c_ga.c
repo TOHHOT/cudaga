@@ -11,15 +11,17 @@ void fillGeneRandom(unsigned char* bits);
 void print_complete(chromo *pool)
 {
 	int numElements = 0;
-	unsigned char * buffer;
-	int i;
+	unsigned char buffer[2 * GENE_BYTES];
+	int i,j;
 
 	for (i = 0; i < NUM_INDIVIDUALS; i++) {
+		numElements = parseBits(pool[i].bits, buffer);
 		if (pool[i].fitness >= END_FITNESS) {
-			buffer = malloc(2 * GENE_BYTES);
-			numElements = parseBits(pool[i].bits, buffer);
 			break;
 		} else {
+			for (j = 0; j < numElements; j++) {
+				printf("%d ", buffer[j]);
+			}
 			printf("%d\n", pool[i].fitness);
 		}
 	}
@@ -43,6 +45,7 @@ void print_complete(chromo *pool)
 			break;
 		}
 	}
+	printf("\n");
 
 	if (!numElements) {
 		printf("There was not Solution\n");
@@ -259,9 +262,9 @@ int calc_fitness(chromo *ind)
 	// They use a very high fitness to say solution has been found.
 	// Go with that for now
 	if (result == TARGET_VALUE)
-		return 9999;
+		return (ind->fitness = 9999);
 	else
-		return ((int)1000.0/abs(TARGET_VALUE - result));	
+		return (ind->fitness = ((int)1000.0/abs(TARGET_VALUE - result)));	
 }
 
 
