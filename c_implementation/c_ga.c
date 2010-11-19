@@ -7,6 +7,7 @@
 
 int parseBits(unsigned char* bits, unsigned char* buffer);
 void fillGeneRandom(unsigned char* bits);
+void gaQuickSort(chromo *arr, int elements);
 
 void print_complete(chromo *pool)
 {
@@ -109,7 +110,7 @@ int insert_roulette(chromo *pool, chromo *locals, chromo *parents)
 
 	return 0;
 }
-
+/*
 int insert(chromo *pool, chromo *locals)
 {
 	signed int i,j,k;
@@ -159,6 +160,65 @@ int insert(chromo *pool, chromo *locals)
 	}
 
 	return fit_sum;
+}*/
+
+// inserts given chromosomes into the pool if fit enough
+int insert(chromo *pool, chromo *locals)
+{
+	int i,j,sumFitness,chromo_num=0;
+	int poolSize = NUM_OFFSPRING * NUM_THREADS;
+	chromo leastFit, tmp;
+		
+	// 1. find the N lowest fit chromos in *pool, where N is the number of *locals (NUM_OFFSPRING)
+	// 2. compare these lowest fit chromos to each of *locals
+	// 3. overwrite FIRST of lowest fit chromos with FIRST of *locals IF *locals is more fit
+	gaQuickSort(pool,poolSize);	
+	for (i=0; i<NUM_OFFSPRING; i++) { // iterate through sorted *pool only up through size of *locals
+		leastFit = pool[0];
+		for (j=chromo_num; j<NUM_OFFSPRING; j++) { // iterate through *locals
+			tmp = locals[j];
+			if (tmp.fitness > leastFit.fitness) { // current chromo has better fitness
+				// insert this chromo into the pool, overwriting old chromo
+				memcpy(&pool[i],&tmp,sizeof(chromo)); 
+				chromo_num++; // this chromo has been inserted, don't check it next iteration
+				break;	// move to next iteration through *pool
+			}
+		}
+	}
+	
+	for(i=0; i< poolSize; i++) {
+		sumFitness = pool[i].fitness;
+	}
+	
+	return sumFitness;
+}
+
+void gaQuickSort(chromo *arr, int elements) {
+
+  int MAX_LEVELS=300; // control 
+
+  int i=0;
+  int swap, piv, L, R, beg[MAX_LEVELS], end[MAX_LEVELS];
+  
+  beg[0]=0; end[0]=elements;
+  while (i>=0) {
+    L=beg[i]; R=end[i]-1;
+    if (L<R) {
+      piv=arr[L].fitness;
+      while (L<R) {
+        while (arr[R].fitness>=piv && L<R) R--; if (L<R) arr[L++].fitness=arr[R].fitness;
+        while (arr[L].fitness<=piv && L<R) L++; if (L<R) arr[R--].fitness=arr[L].fitness;
+      }
+      arr[L].fitness=piv; beg[i+1]=L+1; end[i+1]=end[i]; end[i++]=L;
+      if (end[i]-beg[i]>end[i-1]-beg[i-1]) {
+        swap=beg[i]; beg[i]=beg[i-1]; beg[i-1]=swap;
+        swap=end[i]; end[i]=end[i-1]; end[i-1]=swap;
+      }
+    }
+    else {
+      i--; 
+    }
+  }
 }
 
 int roulette(chromo *pool, chromo *parents, int sum)
