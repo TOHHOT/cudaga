@@ -165,7 +165,7 @@ int insert(chromo *pool, chromo *locals)
 // inserts given chromosomes into the pool if fit enough
 int insert(chromo *pool, chromo *locals)
 {
-	int i,j,sumFitness,chromo_num=0;
+	int i,j,sumFitness=0,chromo_num=0;
 	int poolSize = NUM_OFFSPRING * NUM_THREADS;
 	chromo leastFit, tmp;
 		
@@ -174,7 +174,7 @@ int insert(chromo *pool, chromo *locals)
 	// 3. overwrite FIRST of lowest fit chromos with FIRST of *locals IF *locals is more fit
 	gaQuickSort(pool,poolSize);	
 	for (i=0; i<NUM_OFFSPRING; i++) { // iterate through sorted *pool only up through size of *locals
-		leastFit = pool[0];
+		leastFit = pool[i];
 		for (j=chromo_num; j<NUM_OFFSPRING; j++) { // iterate through *locals
 			tmp = locals[j];
 			if (tmp.fitness > leastFit.fitness) { // current chromo has better fitness
@@ -186,8 +186,8 @@ int insert(chromo *pool, chromo *locals)
 		}
 	}
 	
-	for(i=0; i< poolSize; i++) {
-		sumFitness = pool[i].fitness;
+	for(i=0; i< poolSize; i++) { // sum fitness
+		sumFitness += pool[i].fitness;
 	}
 	
 	return sumFitness;
