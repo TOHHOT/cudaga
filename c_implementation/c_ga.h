@@ -9,7 +9,7 @@
 
 #define END_FITNESS 9999
 
-#define MAX_GENERATIONS 3000
+#define MAX_GENERATIONS 100000
 
 #define CHROMO_LENGTH 300
 
@@ -18,6 +18,8 @@
 #define GENE_BYTES 40
 
 #define TARGET_VALUE 42
+
+#define MUTATION_RATE .001
 
 typedef struct {
 	unsigned char bits[(CHROMO_LENGTH / (2 * GENE_LENGTH))];

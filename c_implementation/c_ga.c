@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <math.h>
 
 #include "c_ga.h"
 
@@ -17,7 +18,7 @@ void print_complete(chromo *pool)
 
 	for (i = 0; i < NUM_INDIVIDUALS; i++) {
 		numElements = parseBits((char *)pool[i].bits, buffer);
-		if (pool[i].fitness >= END_FITNESS) {
+		if (pool[i].fitness == END_FITNESS) {
 			printf(" %d\n", pool[i].fitness);
 			break;
 		}
@@ -264,6 +265,12 @@ int create_individual(chromo *parents, chromo *child)
 		child->bits[i] = parents[1].bits[i];
 	}
 
+	for (i = 0; i < (GENE_BYTES * 8); i++) {
+		if ((((float)rand()) / RAND_MAX) < MUTATION_RATE) {
+			child->bits[i / 8] ^= (1 << (i % 8));
+		}
+	}
+
 	return 0;
 }
 
@@ -321,7 +328,7 @@ int calc_fitness(chromo *ind)
 	if (result == TARGET_VALUE)
 		return (ind->fitness = 9999);
 	else
-		return (ind->fitness = ((int)1000.0/abs(TARGET_VALUE - result)));	
+		return (ind->fitness = ((int)1000.0/fabs(TARGET_VALUE - result)));	
 }
 
 
