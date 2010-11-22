@@ -17,7 +17,7 @@
 
 #define GENE_BYTES 40
 
-#define TARGET_VALUE 42.0f
+#define TARGET_VALUE 42
 
 typedef struct {
 	unsigned char bits[(CHROMO_LENGTH / (2 * GENE_LENGTH))];

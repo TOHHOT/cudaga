@@ -5,26 +5,26 @@
 
 #include "c_ga.h"
 
-int parseBits(unsigned char* bits, unsigned char* buffer);
-void fillGeneRandom(unsigned char* bits);
+int parseBits(char* bits, char* buffer);
+void fillGeneRandom(char* bits);
 void gaQuickSort(chromo *arr, int elements);
 
 void print_complete(chromo *pool)
 {
 	int numElements = 0;
-	unsigned char buffer[2 * GENE_BYTES];
+	char buffer[2 * GENE_BYTES];
 	int i;
 
 	for (i = 0; i < NUM_INDIVIDUALS; i++) {
-		numElements = parseBits(pool[i].bits, buffer);
+		numElements = parseBits((char *)pool[i].bits, buffer);
 		if (pool[i].fitness >= END_FITNESS) {
+			printf(" %d\n", pool[i].fitness);
 			break;
-		} else {
-			printf("%d\n", pool[i].fitness);
 		}
 	}
+	if (i == NUM_INDIVIDUALS) printf("None - Last: %d\n", pool[NUM_INDIVIDUALS - 1].fitness);
 
-	for (i = 0; i < numElements; i += 2) {
+	for (i = 0; i < (numElements - 1); i += 2) {
 		switch (buffer[i]) {
 		case 10:
 			printf("+ %d ", buffer[i + 1]);
@@ -87,9 +87,10 @@ void run_ga(chromo *pool)
         }
 
         for (j = 0; j < NUM_INDIVIDUALS; j++) {
-            if (pool[i].fitness >= END_FITNESS) {
-    			for (j = 0; j < 16; j++) printf("\b");
+            if (pool[j].fitness >= END_FITNESS) {
+    			for (k = 0; k < 16; k++) printf("\b");
     			printf("%lf%% Complete\n", 100.0);
+				printf("Finished Early %d\n", pool[j].fitness);
                 return;
             }
         }
@@ -150,6 +151,7 @@ int insert(chromo *pool, chromo *locals)
 		}
 
 		if (!j) continue;
+		j--;
 		for (k = 0; k < j; k++) {
 			memcpy(&pool[worst[k]], &pool[worst[k + 1]], sizeof(chromo));
 		}
@@ -166,13 +168,12 @@ int insert(chromo *pool, chromo *locals)
 int insert(chromo *pool, chromo *locals)
 {
 	int i,j,sumFitness=0,chromo_num=0;
-	int poolSize = NUM_OFFSPRING * NUM_THREADS;
 	chromo leastFit, tmp;
 		
 	// 1. find the N lowest fit chromos in *pool, where N is the number of *locals (NUM_OFFSPRING)
 	// 2. compare these lowest fit chromos to each of *locals
 	// 3. overwrite FIRST of lowest fit chromos with FIRST of *locals IF *locals is more fit
-	gaQuickSort(pool,poolSize);	
+	gaQuickSort(pool,NUM_INDIVIDUALS);	
 	for (i=0; i<NUM_OFFSPRING; i++) { // iterate through sorted *pool only up through size of *locals
 		leastFit = pool[i];
 		for (j=chromo_num; j<NUM_OFFSPRING; j++) { // iterate through *locals
@@ -186,8 +187,8 @@ int insert(chromo *pool, chromo *locals)
 		}
 	}
 	
-	for(i=0; i< poolSize; i++) { // sum fitness
-		sumFitness += pool[i].fitness;
+	for(i=0; i< NUM_INDIVIDUALS; i++) {
+		sumFitness = pool[i].fitness;
 	}
 	
 	return sumFitness;
@@ -271,16 +272,16 @@ int init_individual(chromo *ind)
 	if (!ind) return -1;
 	
 	ind->fitness = 0;
-	fillGeneRandom(ind->bits);
+	fillGeneRandom((char *)ind->bits);
 
 	return 0;
 }
 
 int calc_fitness(chromo *ind)
 {
-	int result = 0;
+	double result = 0;
 	int numElements;
-	unsigned char * buffer;
+	char * buffer;
 	int i;
 
 	if (!ind) return -1;
@@ -294,7 +295,7 @@ int calc_fitness(chromo *ind)
 	
 	// Now the buffer should have a correct series of number/op/number etc
 	buffer = malloc(2 * GENE_BYTES);
-	numElements = parseBits(ind->bits, buffer);
+	numElements = parseBits((char *)ind->bits, buffer);
 	for (i = 0; i < numElements - 1; i++) {
 		switch (buffer[i]) {
 		  case 10:
@@ -332,7 +333,7 @@ int calc_fitness(chromo *ind)
 // operators.  This is number, operator, number, etc.  Anything else is
 // thrown out.  Fills the passed buffer with the ops and returns the
 // number of elements
-int parseBits(unsigned char* bits, unsigned char* buffer)
+int parseBits(char* bits, char* buffer)
 {
 	char isOperator = 1;	// Want an operator next
 	char temp;
@@ -395,7 +396,7 @@ int parseBits(unsigned char* bits, unsigned char* buffer)
 	return index;
 }
 
-void fillGeneRandom(unsigned char* bits)
+void fillGeneRandom(char* bits)
 {
 	int i;
 
