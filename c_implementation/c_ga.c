@@ -88,7 +88,7 @@ void run_ga(chromo *pool)
         }
 
         for (j = 0; j < NUM_INDIVIDUALS; j++) {
-            if (pool[j].fitness >= END_FITNESS) {
+            if (pool[j].fitness == END_FITNESS) {
     			for (k = 0; k < 16; k++) printf("\b");
     			printf("%lf%% Complete\n", 100.0);
 				printf("Finished Early %d\n", pool[j].fitness);
