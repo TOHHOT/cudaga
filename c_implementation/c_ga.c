@@ -6,18 +6,18 @@
 
 #include "c_ga.h"
 
-int parseBits(char* bits, char* buffer);
-void fillGeneRandom(char* bits);
+int parseBits(unsigned char* bits, unsigned char* buffer);
+void fillGeneRandom(unsigned char* bits);
 void gaQuickSort(chromo *arr, int elements);
 
 void print_complete(chromo *pool)
 {
 	int numElements = 0;
-	char buffer[2 * GENE_BYTES];
+	unsigned char buffer[2 * GENE_BYTES];
 	int i;
 
 	for (i = 0; i < NUM_INDIVIDUALS; i++) {
-		numElements = parseBits((char *)pool[i].bits, buffer);
+		numElements = parseBits(pool[i].bits, buffer);
 		if (pool[i].fitness == END_FITNESS) {
 			printf(" %d\n", pool[i].fitness);
 			break;
@@ -112,7 +112,6 @@ int insert_roulette(chromo *pool, chromo *locals, chromo *parents)
 
 	return 0;
 }
-/*
 int insert(chromo *pool, chromo *locals)
 {
 	signed int i,j,k;
@@ -163,7 +162,8 @@ int insert(chromo *pool, chromo *locals)
 	}
 
 	return fit_sum;
-}*/
+}
+/*
 
 // inserts given chromosomes into the pool if fit enough
 int insert(chromo *pool, chromo *locals)
@@ -222,6 +222,7 @@ void gaQuickSort(chromo *arr, int elements) {
     }
   }
 }
+*/
 
 int roulette(chromo *pool, chromo *parents, int sum)
 {
@@ -279,7 +280,7 @@ int init_individual(chromo *ind)
 	if (!ind) return -1;
 	
 	ind->fitness = 0;
-	fillGeneRandom((char *)ind->bits);
+	fillGeneRandom((unsigned char *)ind->bits);
 
 	return 0;
 }
@@ -288,7 +289,7 @@ int calc_fitness(chromo *ind)
 {
 	double result = 0;
 	int numElements;
-	char * buffer;
+	unsigned char * buffer;
 	int i;
 
 	if (!ind) return -1;
@@ -302,7 +303,7 @@ int calc_fitness(chromo *ind)
 	
 	// Now the buffer should have a correct series of number/op/number etc
 	buffer = malloc(2 * GENE_BYTES);
-	numElements = parseBits((char *)ind->bits, buffer);
+	numElements = parseBits((unsigned char *)ind->bits, buffer);
 	for (i = 0; i < numElements - 1; i++) {
 		switch (buffer[i]) {
 		  case 10:
@@ -340,10 +341,10 @@ int calc_fitness(chromo *ind)
 // operators.  This is number, operator, number, etc.  Anything else is
 // thrown out.  Fills the passed buffer with the ops and returns the
 // number of elements
-int parseBits(char* bits, char* buffer)
+int parseBits(unsigned char* bits, unsigned char* buffer)
 {
-	char isOperator = 1;	// Want an operator next
-	char temp;
+	unsigned char isOperator = 1;	// Want an operator next
+	unsigned char temp;
 	int index = 0;
 	int i;
 
@@ -368,7 +369,7 @@ int parseBits(char* bits, char* buffer)
 			//	continue;
 			}
 		}
-		// Now do it again for the other half of this char
+		// Now do it again for the other half of this unsigned char
 		temp = (bits[i] & 0xF0) >> 4;
 		if (isOperator) {
 			if (!((temp < 10) || (temp > 13))) {
@@ -403,7 +404,7 @@ int parseBits(char* bits, char* buffer)
 	return index;
 }
 
-void fillGeneRandom(char* bits)
+void fillGeneRandom(unsigned char* bits)
 {
 	int i;
 
