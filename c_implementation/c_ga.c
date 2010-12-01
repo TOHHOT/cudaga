@@ -195,6 +195,7 @@ int insert(chromo *pool, chromo *locals)
 	return sumFitness;
 }
 
+// non-recursive quicksort
 void gaQuickSort(chromo *arr, int elements) {
 
   int MAX_LEVELS=300; // control 

@@ -26,11 +26,11 @@ __global__ void run_ga(mutex *lock, chromo *pool, unsigned *seeds)
 		while (lock[1]);
 	}
 	mutex_lock(lock, &seed);
-	//for (i = 0; i < NUM_OFFSPRING; i++) {
-	//	cpy_ind(&locals[i], &pool[i + th_id * NUM_OFFSPRING]);
-	//}
+	for (i = 0; i < NUM_OFFSPRING; i++) {
+		cpy_ind(&locals[i], &pool[i + th_id * NUM_OFFSPRING]);
+	}
 	mutex_unlock(lock);
-	return;
+	//return;
 	for (i = 0; i < (NUM_OFFSPRING - 1); i += 2) {
 		calc_fitness(&locals[i], &locals[i + 1]);
 	}

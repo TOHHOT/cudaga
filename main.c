@@ -18,7 +18,7 @@ int main(int argc, char * argv[])
 	int i;
 	mutex *lock;
 
-    if (cudaSetDevice(1) != cudaSuccess) {
+    if (cudaSetDevice(0) != cudaSuccess) {
         printf("Error: Unable to set device\n");
         return 3;
     }
