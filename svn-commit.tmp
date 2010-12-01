@@ -1,0 +1,6 @@
+might be working sort of,... spits out answers, calc_fitness seems wrong
+--This line, and those below, will be ignored--
+
+M    c_implementation/c_ga.h
+M    c_implementation/main.c
+M    c_implementation/c_ga.c
