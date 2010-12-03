@@ -9,20 +9,26 @@
 
 #define END_FITNESS 9999
 
-#define MAX_GENERATIONS 10000
+#define LEGAL_MOVE_REWARD 0
+#define ILLEGAL_MOVE_PENALTY 100
+#define WIN_REWARD 1
+#define LOSE_PENALTY 5
+#define TIE_REWARD 0
 
-#define CHROMO_LENGTH 300
 
-#define GENE_LENGTH 4
+#define MAX_GENERATIONS 100000
 
-#define GENE_BYTES 40
+#define GENE_BYTES 2
+#define CHROMO_LENGTH 2048
 
 #define TARGET_VALUE 42
 
 #define MUTATION_RATE .001
 
 typedef struct {
-	unsigned char bits[(CHROMO_LENGTH / (2 * GENE_LENGTH))];
+	// bits[XX][1] stores next state
+	// 3 LSB of bits[XX][0] stores the move
+	unsigned char bits[CHROMO_LENGTH][2];
 	int fitness;
 } chromo;
 
@@ -40,7 +46,7 @@ int create_individual(chromo *parents, chromo *child);
 
 int init_individual(chromo *ind);
 
-int calc_fitness(chromo *ind);
+int calc_fitness(chromo *players);
 
 
 #endif //__C_GA_H__
