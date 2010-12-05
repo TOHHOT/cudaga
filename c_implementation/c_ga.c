@@ -26,9 +26,13 @@ void run_ga(chromo *pool) {
 	sum = 0;
 	for (i = 0; i < NUM_INDIVIDUALS; i++) {
 		init_individual(pool + i);
-		calc_fitness(pool + i);
-		sum += pool[i].fitness;
 	}
+	for (i = 0; i < NUM_INDIVIDUALS; i+=2) {
+		sum += calc_fitness(pool + i);
+	}
+	if (NUM_INDIVIDUALS & 0x01)
+		calc_fitness(pool + NUM_INDIVIDUALS - 1);
+
 
 	printf("               ");
 	for (i = 0; i < MAX_GENERATIONS; i++) {
@@ -147,7 +151,7 @@ void gaQuickSort(chromo *arr, int elements) {
 		}
 	}
 }
-*/
+
 
 int roulette(chromo *pool, chromo *parents, int sum) {
 	int rand_val = (((float) rand()) / RAND_MAX) * sum;
@@ -272,10 +276,10 @@ int calc_fitness(chromo *players) {
 
 		// Check for invalid move
 		height = ((theBoard[0][nextPlay] & (7 << 2)) >> 2);
+		lastMove[turn] = nextPlay;
 		if (height > 5) {
 			// Illegal move (nub)
 			seq_illegal_turns++;
-			lastMove[turn] = nextPlay;
 			fitness[turn] -= ILLEGAL_MOVE_PENALTY;
 		} else { // Legal move, record it
 			seq_illegal_turns = 0;
