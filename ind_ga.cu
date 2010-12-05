@@ -5,7 +5,6 @@
 
 __device__ int parseBits(unsigned char* bits, unsigned char* buffer);
 __device__ void fillGeneRandom(unsigned char* bits, unsigned *seed);
-__device__ int calc_fitness_one(chromo *ind);
 
 __device__ int create_individual(chromo *parents, chromo *child, unsigned *seed)
 {
@@ -15,6 +14,7 @@ __device__ int create_individual(chromo *parents, chromo *child, unsigned *seed)
 		return -1;
 	
 	child->fitness = 0;
+	child->result = 0;
 
 	for (i = 0; i < xpoint; i++) {
 		child->bits[i] = parents[0].bits[i];
@@ -47,9 +47,14 @@ __device__ void cpy_ind(chromo *ind, chromo *old)
 {
 	int i;
 	ind->fitness = old->fitness;
-	for (i = 0; i < (CHROMO_LENGTH / (2 * GENE_LENGTH)); i++) {
+	ind->result = old->result;
+	for (i = 0; i < GENE_BYTES; i++) {
 		ind->bits[i] = old->bits[i];
 	}
+
+	/*for (i = 0; i < (2 * GENE_BYTES); i++) {
+		ind->buffer[i] = old->buffer[i];
+	}*/
 
 	return;
 }
@@ -63,30 +68,28 @@ __device__ float gabs(float val)
 	}
 }
 
-__device__ int calc_fitness(chromo *ind, chromo *inds)
+__device__ int calc_fitness(chromo *ind)
 {
-	return calc_fitness_one(ind) + calc_fitness_one(inds);
+	return calc_fitness_one(ind) + calc_fitness_one(ind + 1);
 }
 
 __device__ int calc_fitness_one(chromo *ind)
 {
-	double result = 0;
+	float result = 0;
 	int numElements;
 	unsigned char buffer[2 * GENE_BYTES];
 	int i;
 
 	if (!ind) return -1;
 	
-	if (ind->fitness)
-		return ind->fitness;
-
 	// Relegate the parsing of the bits to a specific function.
 	// In this case, each byte of genes can hold two mathematical
 	// things (operators or numbers).  Allocate for the worst case.
 	
 	// Now the buffer should have a correct series of number/op/number etc
+	//numElements = parseBits((unsigned char *)ind->bits, ind->buffer);
 	numElements = parseBits((unsigned char *)ind->bits, buffer);
-	for (i = 0; i < numElements - 1; i++) {
+    for (i = 0; (i < numElements - 1) && ((i + 1) < (2 * GENE_BYTES)); i += 2) {
 		switch (buffer[i]) {
 		  case 10:
 			result += buffer[i+1];
@@ -108,10 +111,13 @@ __device__ int calc_fitness_one(chromo *ind)
 	// Now calculate the fitness
 	// They use a very high fitness to say solution has been found.
 	// Go with that for now
+	ind->result = result;
 	if (result == TARGET_VALUE)
-		return (ind->fitness = 9999);
+		ind->fitness = 9999;
 	else
-		return (ind->fitness = ((int)1000.0/gabs(TARGET_VALUE - result)));	
+		ind->fitness = ((int)1000.0/gabs(TARGET_VALUE - result));	
+
+	return 0;
 }
 
 
@@ -134,43 +140,26 @@ __device__ int parseBits(unsigned char* bits, unsigned char* buffer)
 		temp = (bits[i] & 0x0F);
 		if (isOperator) {
 			if (!((temp < 10) || (temp > 13))) {
-			//if ((temp < 10) || (temp > 13))
-			//	continue;
-			//else {
 				isOperator = 0;
 				buffer[index++] = temp;
-			//	continue;
 			}
 		} else {
 			if (!(temp > 9)) {
-			//if (temp > 9)
-			//	continue;
-			//else {
 				isOperator = 1;
 				buffer[index++] = temp;
-			//	continue;
 			}
 		}
-		// Now do it again for the other half of this unsigned char
 		temp = (bits[i] & 0xF0) >> 4;
 		if (isOperator) {
 			if (!((temp < 10) || (temp > 13))) {
-			//if ((temp < 10) || (temp > 13))
-			//	continue;
-			//else {
 				isOperator = 0;
 				buffer[index++] = temp;
-			//	continue;
 			}
 		}
 		else {
 			if (!(temp > 9)) {
-			//if (temp > 9)
-			//	continue;
-			//else {
 				isOperator = 1;
 				buffer[index++] = temp;
-			//	continue;
 			}
 		}
 	}
@@ -178,7 +167,7 @@ __device__ int parseBits(unsigned char* bits, unsigned char* buffer)
 	// Now the original authors removed any divide by zero risks
 	// by replacing any '/' that's followed by a '0' with a '+'
 
-	for (i = 0; i < index; i++) {
+	for (i = 0; i < (index - 1); i++) {
 		if ((buffer[i] == 13) && (buffer[i+1] == 0))
 			buffer[i] = 10;
 	}

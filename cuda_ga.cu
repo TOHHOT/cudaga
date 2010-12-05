@@ -16,58 +16,95 @@ __global__ void run_ga(mutex *lock, chromo *pool, unsigned *seeds)
 	int i,j;
 	int th_id = threadIdx.x + blockIdx.x * blockDim.x;
 	unsigned seed = seeds[th_id];
-
+	int retVal;
+	int waitCount = 0;
 	if (th_id == 0) {
 		for (i = 0; i < NUM_INDIVIDUALS; i++) {
-			init_individual(&pool[i], &seed);
+			//init_individual(&pool[i], &seed);
+			if (i & 0x01) {
+				calc_fitness(&pool[i - 1]);
+			}
 		}
 		lock[1] = 0;
 	} else {
-		while (lock[1]);
+		waitCount = 0;
+		while (lock[1]) {
+			waitCount++;
+		}
 	}
-	mutex_lock(lock, &seed);
-	for (i = 0; i < NUM_OFFSPRING; i++) {
-		cpy_ind(&locals[i], &pool[i + th_id * NUM_OFFSPRING]);
+	retVal = 1;
+	while (retVal) {
+		if (0 == mutex_lock()) {
+			for (i = 0; i < NUM_OFFSPRING; i++) {
+				cpy_ind(&locals[i], &pool[i + th_id * NUM_OFFSPRING]);
+			}
+			mutex_unlock();
+			retVal = 0;
+		} else {
+			waitCount++;
+		}
 	}
-	mutex_unlock(lock);
-	//return;
 	for (i = 0; i < (NUM_OFFSPRING - 1); i += 2) {
-		calc_fitness(&locals[i], &locals[i + 1]);
+		calc_fitness(&locals[i]);
 	}
 	if (NUM_OFFSPRING & 0x01) {
-		calc_fitness(&locals[0], &locals[NUM_OFFSPRING - 1]);
+		calc_fitness(&locals[NUM_OFFSPRING - 2]);
 	}
 
 	for (i = 0; (i < MAX_GENERATIONS); i++) {
-		mutex_lock(lock, &seed);
-		insert_roulette(lock, pool, locals, parents, &seed);
-		if (lock[1]) {
-			seeds[th_id] = seed;
-			mutex_unlock(lock);
-			return;
-		}
-		for (j = 0; j < NUM_OFFSPRING; j++) {
-			if (locals[j].fitness >= END_FITNESS) {
-				lock[1] = 1;
-				seeds[th_id] = seed;
-				mutex_unlock(lock);
-				return;
+		retVal = 1;
+		waitCount = 0;
+		while (retVal) {
+			if (0 == mutex_lock()) {
+				insert_roulette(lock, pool, locals, parents, &seed);
+		
+				if (lock[1]) {
+					seeds[th_id] = seed;
+					mutex_unlock();
+					return;
+				}
+				for (j = 0; j < NUM_OFFSPRING; j++) {
+					if (locals[j].fitness >= END_FITNESS) {
+						lock[1] = 1;
+						seeds[th_id] = seed;
+						mutex_unlock();
+						return;
+					}
+				}
+				seeds[th_id] = waitCount;
+				mutex_unlock();
+				retVal = 0;
+			} else {
+				waitCount++;
 			}
 		}
-		mutex_unlock(lock);
 
 		for (j = 0; j < NUM_OFFSPRING; j++) {
-			create_individual(parents, &locals[i], &seed);
+			create_individual(parents, &locals[j], &seed);
 		}
-		for (j = 0; j < NUM_OFFSPRING; j += 2) {
-			calc_fitness(&locals[i], &locals[i + 1]);
+		for (j = 0; j < (NUM_OFFSPRING - 1); j += 2) {
+			calc_fitness(&locals[j]);
 		}
 		if (NUM_OFFSPRING & 0x01) {
-			calc_fitness(&locals[0], &locals[NUM_OFFSPRING - 1]);
+			calc_fitness(&locals[NUM_OFFSPRING - 2]);
 		}
 	}
+	seeds[th_id] = seed;
 
 	return;
+}
+
+__global__ void init_ga(chromo *pool, unsigned *seeds)
+{
+	int i;
+	unsigned seed = seeds[0];
+	for (i = 0; i < NUM_INDIVIDUALS; i++) {
+		init_individual(&pool[i], &seed);
+		if (i & 0x01) {
+			calc_fitness(&pool[i - 1]);
+		}
+	}
+	seeds[0] = seed;
 }
 
 //locks the mutex, then inserts the new individuals to the pool if fit enough

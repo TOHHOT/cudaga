@@ -4,10 +4,14 @@
 typedef int mutex;
 
 // lock a global/shared mutex located at lock
-__device__ void mutex_lock(mutex *lock, unsigned int *rand_seed);
+__device__ int mutex_lock(void);
 
 // unlock a global/shared mutex located at lock, returns nonzero on fail.
-__device__ int mutex_unlock(mutex *lock);
+__device__ int mutex_unlock(void);
+
+__device__ int lock(mutex *lock);
+
+__device__ int unlock(mutex *unlock);
 
 // this initializes the mutex to be unlocked. this must be a separate call from the cpu to ensure 
 // no race conditions from initialization and first lock of other threads.

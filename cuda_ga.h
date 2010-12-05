@@ -8,7 +8,7 @@
 #include "mutex_testing/mutex_testing.h"
 
 #ifndef NUM_THREADS
-#define NUM_THREADS 256
+#define NUM_THREADS 10
 #endif
 
 #ifndef NUM_OFFSPRING
@@ -20,7 +20,7 @@
 #endif
 
 #ifndef MAX_GENERATIONS
-#define MAX_GENERATIONS 100
+#define MAX_GENERATIONS 1000
 #endif
 
 #define NUM_INDIVIDUALS (NUM_THREADS * NUM_OFFSPRING)
@@ -33,6 +33,8 @@
 //when this returns the last “generation” of individuals will be stored in the pool in order of fitness
 //best first.
 __global__ void run_ga(mutex *lock, chromo *pool, unsigned *seed);
+
+__global__ void init_ga(chromo *pool, unsigned *seed);
 
 //locks the mutex, then inserts the new individuals to the pool if fit enough
 //then selects new individuals using roulette wheel, storing in locals, then unlocks the mutex

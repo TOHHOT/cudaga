@@ -13,28 +13,36 @@
 
 #include "random.h"
 
-__device__ void mutex_lock(mutex *lock, unsigned int *rand_seed)
+__device__ mutex gl_mutex[1];
+
+__device__ int mutex_lock(void)
 {
-	int i, rand;
-	int x;
 
-	while (atomicCAS(lock, 0, 1)) {
-		rand = (int)(grand(rand_seed) * 100);
-		for (i = 0; i < rand; i++) {
-			x = i;
-		}
-	}
+	//return lock(block);
+	return (lock(gl_mutex));
 
-	return;
+	//return 0;
 }
 
-__device__ int mutex_unlock(mutex *lock)
+__device__ int lock(mutex *block)
 {
-	return !atomicCAS(lock, 1, 0);
+	return atomicCAS(block, 0, 1);
+}
+
+__device__ int unlock(mutex *block)
+{
+	return atomicCAS(block, 1, 0);
+}
+
+__device__ int mutex_unlock(void)
+{
+	return unlock(gl_mutex);
+	//return unlock(lock);
 }
 
 __global__ void mutex_init(mutex *lock)
 {
+	gl_mutex[0] = 0;
 	lock[0] = 0;
 	lock[1] = 1;
 }
