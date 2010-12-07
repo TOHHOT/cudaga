@@ -16,7 +16,8 @@ int main(int argc, char * argv[])
     chromo pool[NUM_INDIVIDUALS];
 	chromo *d_pool;
 	unsigned *seeds;
-	int i;
+	int i,j;
+	double complete = 0;
 	mutex *lock;
 
     if (cudaSetDevice(1) != cudaSuccess) {
@@ -52,10 +53,25 @@ int main(int argc, char * argv[])
 	cudaThreadSynchronize();
 	printf("Initialized individuals\n");
 
-	for (i = 0; i < 10; i++) {
+
+    printf("               ");
+	for (i = 0; i < 10000; i++) {
+        if (i > (complete * 1000)) {
+            for (j = 0; j < 16; j++) printf("\b");
+            if (complete < .1) printf(" ");
+            printf("%3.1lf%% Complete ", (complete - (i / 1000)) * 100);
+            fflush(stdout);
+ 
+			cudaMemcpy(pool, d_pool, NUM_INDIVIDUALS * sizeof(chromo), cudaMemcpyDeviceToHost);
+			cudaThreadSynchronize();
+
+		    print_complete(pool);
+			complete += .0025;
+        }
+
+	
     	run_ga<<<1, NUM_THREADS>>>(lock, d_pool, seeds);
 		cudaThreadSynchronize();
-		printf("Iteration\n");
 	}
 
 	cudaMemcpy(pool, d_pool, NUM_INDIVIDUALS * sizeof(chromo), cudaMemcpyDeviceToHost);
@@ -66,75 +82,6 @@ int main(int argc, char * argv[])
 	printf("Printing Complete\n");
 
     return 0;
-}
-
-void print_complete(chromo *pool)
-{
-    int numElements = 0;
-    unsigned char buffer[2 * GENE_BYTES];
-    int i,j;
-	float result;
-	int fitness;
-
-    for (i = 0; i < NUM_INDIVIDUALS; i++) {
-        numElements = hparseBits(pool[i].bits, buffer);
-		result = hcalc_fitness(&pool[i]);
-        if (pool[i].fitness == END_FITNESS) {
-		    if (result == TARGET_VALUE)
-		        fitness = 9999;
-		    else
-		        fitness = ((int)1000.0/fabs(TARGET_VALUE - result));
-
-        	printf(" %lf %d %lf %d\n", pool[i].result, pool[i].fitness, result, fitness);
-            break;
-        }
-    }
-	if (result == TARGET_VALUE)
-		fitness = 9999;
-	else
-		fitness = ((int)1000.0/fabs(TARGET_VALUE - result));
-    if (i == NUM_INDIVIDUALS) {
-		printf("None - Last: %lf %d %lf %d\n", (double)pool[NUM_INDIVIDUALS - 1].result, pool[NUM_INDIVIDUALS - 1].fitness, result, fitness);
-		i--;
-	}
-
-	result = 0;
-    for (j = 0; (j < numElements - 1) && ((j + 1) < (2 * GENE_BYTES)); j += 2) {
-		/*if (pool[i].buffer[j] != buffer[j]) {
-			printf("\nInconsistency %d != %d\n", pool[i].buffer[j], buffer[j]);
-		}
-		if (pool[i].buffer[j+1] != buffer[j+1]) {
-			printf("\nInconsistency %d != %d\n", pool[i].buffer[j+1], buffer[j+1]);
-		}*/
-        switch (buffer[j]) {
-        case 10:
-            printf("+ %d ", buffer[j + 1]);
-			result += buffer[j + 1];
-            break;
-        case 11:
-            printf("- %d ", buffer[j + 1]);
-			result -= buffer[j + 1];
-            break;
-        case 12:
-            printf("* %d ", buffer[j + 1]);
-			result *= buffer[j + 1];
-            break;
-        case 13:
-            printf("/ %d ", buffer[j + 1]);
-			result /= buffer[j + 1];
-            break;
-        default:
-            printf("Error ");
-            break;
-        }
-    }
-    printf("= %lf\n", result);
-
-    if (!numElements) {
-        printf("There was not Solution\n");
-    }
-
-    return;
 }
 
 float hcalc_fitness(chromo *ind)

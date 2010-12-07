@@ -5,20 +5,27 @@
 #define GENE_LENGTH 4
 #endif
 
-#ifndef GENE_BYTES 
-#define GENE_BYTES 40
-#endif
-
 #ifndef TARGET_VALUE
 #define TARGET_VALUE 42
 #endif
+
+#define LEGAL_MOVE_REWARD 0
+#define ILLEGAL_MOVE_PENALTY 100
+#define WIN_REWARD 1
+#define LOSE_PENALTY 5
+#define TIE_REWARD 0
+
 
 #ifndef MUTATION_RATE
 #define MUTATION_RATE .001f
 #endif
 
+#ifndef GENE_BYTES
+#define GENE_BYTES 2
+#endif
+
 #ifndef CHROMO_LENGTH
-#define CHROMO_LENGTH 300
+#define CHROMO_LENGTH 2048
 #endif
 
 
@@ -26,8 +33,7 @@
 //holds chromosomes and fitness for an individual
 //must contain member called fitness of type int, higher must be better
 typedef struct {
-    unsigned char bits[GENE_BYTES];
-	float result;
+    unsigned char bits[CHROMO_LENGTH][2];
     int fitness;
 } chromo;
 
@@ -47,7 +53,6 @@ __device__ int init_individual(chromo *ind, unsigned *seed);
 
 //this calculates fitness for an individual and stores it in the structure
 //it will return non-zero if individual has had fitness previously calculated.
-__device__ int calc_fitness(chromo *ind);
-__device__ int calc_fitness_one(chromo *ind);
+__device__ int calc_fitness(chromo *ind, unsigned *seed);
 
 #endif //__IND_GA_H__

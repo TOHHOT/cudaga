@@ -8,7 +8,7 @@
 #include "mutex_testing/mutex_testing.h"
 
 #ifndef NUM_THREADS
-#define NUM_THREADS 10
+#define NUM_THREADS 200
 #endif
 
 #ifndef NUM_OFFSPRING

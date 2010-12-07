@@ -5,9 +5,11 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 int main(int argc, char * argv[]) {
 	chromo computer[1];
+	srand(time(NULL));
 	printf("Drop in the chromosome:\n");
 	readPlayer(computer);
 

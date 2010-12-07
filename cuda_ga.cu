@@ -11,18 +11,21 @@
 //best first.
 __global__ void run_ga(mutex *lock, chromo *pool, unsigned *seeds)
 {
-	chromo locals[NUM_OFFSPRING];
-	chromo parents[2];
+	chromo locals[NUM_OFFSPRING + 1];
+	chromo *parents = locals + 1;
 	int i,j;
 	int th_id = threadIdx.x + blockIdx.x * blockDim.x;
 	unsigned seed = seeds[th_id];
 	int retVal;
 	int waitCount = 0;
+
+	seeds[th_id] = 42;
+
 	if (th_id == 0) {
 		for (i = 0; i < NUM_INDIVIDUALS; i++) {
 			//init_individual(&pool[i], &seed);
 			if (i & 0x01) {
-				calc_fitness(&pool[i - 1]);
+				calc_fitness(&pool[i - 1], &seed);
 			}
 		}
 		lock[1] = 0;
@@ -32,6 +35,7 @@ __global__ void run_ga(mutex *lock, chromo *pool, unsigned *seeds)
 			waitCount++;
 		}
 	}
+	__syncthreads();
 	retVal = 1;
 	while (retVal) {
 		if (0 == mutex_lock()) {
@@ -44,11 +48,16 @@ __global__ void run_ga(mutex *lock, chromo *pool, unsigned *seeds)
 			waitCount++;
 		}
 	}
+	seeds[th_id] = 1;
 	for (i = 0; i < (NUM_OFFSPRING - 1); i += 2) {
-		calc_fitness(&locals[i]);
+		calc_fitness(&locals[i], &seed);
+		calc_fitness(&locals[i], &seed);
+		calc_fitness(&locals[i], &seed);
 	}
 	if (NUM_OFFSPRING & 0x01) {
-		calc_fitness(&locals[NUM_OFFSPRING - 2]);
+		calc_fitness(&locals[NUM_OFFSPRING - 2], &seed);
+		calc_fitness(&locals[NUM_OFFSPRING - 2], &seed);
+		calc_fitness(&locals[NUM_OFFSPRING - 2], &seed);
 	}
 
 	for (i = 0; (i < MAX_GENERATIONS); i++) {
@@ -83,10 +92,14 @@ __global__ void run_ga(mutex *lock, chromo *pool, unsigned *seeds)
 			create_individual(parents, &locals[j], &seed);
 		}
 		for (j = 0; j < (NUM_OFFSPRING - 1); j += 2) {
-			calc_fitness(&locals[j]);
+			calc_fitness(&locals[j], &seed);
+			calc_fitness(&locals[j], &seed);
+			calc_fitness(&locals[j], &seed);
 		}
 		if (NUM_OFFSPRING & 0x01) {
-			calc_fitness(&locals[NUM_OFFSPRING - 2]);
+			calc_fitness(&locals[NUM_OFFSPRING - 2], &seed);
+			calc_fitness(&locals[NUM_OFFSPRING - 2], &seed);
+			calc_fitness(&locals[NUM_OFFSPRING - 2], &seed);
 		}
 	}
 	seeds[th_id] = seed;
@@ -101,15 +114,14 @@ __global__ void init_ga(chromo *pool, unsigned *seeds)
 	for (i = 0; i < NUM_INDIVIDUALS; i++) {
 		init_individual(&pool[i], &seed);
 		if (i & 0x01) {
-			calc_fitness(&pool[i - 1]);
+			calc_fitness(&pool[i - 1], &seed);
+			calc_fitness(&pool[i - 1], &seed);
+			calc_fitness(&pool[i - 1], &seed);
 		}
 	}
 	seeds[0] = seed;
 }
 
-//locks the mutex, then inserts the new individuals to the pool if fit enough
-//then selects new individuals using roulette wheel, storing in locals, then unlocks the mutex
-//number of individuals inserted into pool is based on NUM_OFFSPRING
 __device__ int insert_roulette(mutex *lock, chromo *pool, chromo *locals, 
 									chromo *parents, unsigned *seed)
 {

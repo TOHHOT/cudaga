@@ -3,7 +3,7 @@ OBJS=
 SRC=cuda_ga.cu
 DEP=mutex_testing/mutex_testing.h random.h cuga_ga.h ind_ga.h
 CC=nvcc
-CFLAGS=-g -arch sm_11
+CFLAGS=-g -O3 -arch sm_11
 LIBS=
 
 .PHONY:all clean

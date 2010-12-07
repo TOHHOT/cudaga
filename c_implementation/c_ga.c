@@ -33,7 +33,6 @@ void print_complete(chromo *pool) {
 }
 
 void playMe(chromo *pool) {
-	gaQuickSort(pool, NUM_INDIVIDUALS);
 
 	chromo *players = &pool[0];
 
@@ -140,8 +139,8 @@ void playMe(chromo *pool) {
 	}
 
 	if (gamestate == 1) { // Someone just won
-		fitness[turn] += WIN_REWARD;
-		fitness[turn ^ 1] -= LOSE_PENALTY;
+		fitness[turn ^ 1] += WIN_REWARD;
+		fitness[turn] -= LOSE_PENALTY;
 
 		if (DEBUG)
 			printf("%s won:\n", turn ? "Red" : "Black");
