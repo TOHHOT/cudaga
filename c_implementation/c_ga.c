@@ -28,7 +28,7 @@ void print_complete(chromo *pool) {
 
 	// Play against the computer:
 
-	playMe(pool);
+	//playMe(pool);
 
 }
 
@@ -192,7 +192,11 @@ void run_ga(chromo *pool) {
 			roulette(pool, parents, sum);
 			for (k = 0; k < NUM_OFFSPRING; k++) {
 				create_individual(parents, &child[k]);
-				calc_fitness(&child[k]);
+				if (k & 0x01) {
+					calc_fitness(&child[k - 1]);
+					calc_fitness(&child[k - 1]);
+					calc_fitness(&child[k - 1]);
+				}
 			}
 			sum = insert(pool, child);
 		}
@@ -464,8 +468,10 @@ int calc_fitness(chromo *players) {
 
 	if (DEBUG) printBoard(theBoard);
 
-	players[0].fitness = fitness[0];
-	players[1].fitness = fitness[1];
+	players[0].fitness += fitness[0];
+	if (players[0].fitness < 1) players[0].fitness = 1;
+	players[1].fitness += fitness[1];
+	if (players[1].fitness < 1) players[1].fitness = 1;
 
 	return 0;
 }
