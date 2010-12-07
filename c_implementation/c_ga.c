@@ -340,15 +340,19 @@ int gameOver(char board[6][7], char column) {
 	count = 1;
 	col = column;
 	while (col > 0) {
-		if ((board[height][col] & 3) == (board[height][--col] & 3))
+		if ((board[height][col] & 3) == (board[height][col - 1] & 3)) {
+			col--;
 			count++;
+		}
 		else
 			break;
 	}
 	col = column;
-	while (col < 6) {
-		if ((board[height][col] & 3) == (board[height][++col] & 3))
+	while (col < 5) {
+		if ((board[height][col] & 3) == (board[height][col + 1] & 3)) {
+			col++;
 			count++;
+	}
 		else
 			break;
 	}
@@ -362,8 +366,10 @@ int gameOver(char board[6][7], char column) {
 	row = height;
 	if (height >= 3) {	// Need at least 4 checkers in this column
 		while (row > 0) {
-			if ((board[row][column] & 3) == (board[--row][column] & 3))
+			if ((board[row][column] & 3) == (board[row - 1][column] & 3)) {
+				row--;
 				count++;
+			}
 			else
 				break;
 		}
@@ -379,16 +385,22 @@ int gameOver(char board[6][7], char column) {
 	col = column;
 	row = height;
 	while (row > 0 && col > 0) {		// check down,left first
-		if ((board[row][col] & 3) == (board[--row][--col] & 3))
+		if ((board[row][col] & 3) == (board[row - 1][col - 1] & 3)) {
+			row--;
+			col--;
 			count++;
+		}
 		else
 			break;
 	}
 	col = column;
 	row = height;
-	while (row < 5 && col < 6) {		// check up, right next
-		if ((board[row][col] & 3) == (board[++row][++col] & 3))
+	while (row < 4 && col < 5) {		// check up, right next
+		if ((board[row][col] & 3) == (board[row + 1][col + 1] & 3)) {
+			row++;
+			col++;
 			count++;
+		}
 		else
 			break;
 	}
@@ -401,17 +413,23 @@ int gameOver(char board[6][7], char column) {
 	count = 1;
 	col = column;
 	row = height;
-	while (row > 0 && col < 6) {		// check down,right first
-		if ((board[row][col] & 3) == (board[--row][++col] & 3))
+	while (row > 0 && col < 5) {		// check down,right first
+		if ((board[row][col] & 3) == (board[row - 1][col + 1] & 3)) {
+			row--;
+			col++;
 			count++;
+		}
 		else
 			break;
 	}
 	col = column;
 	row = height;
-	while (row < 5 && col > 0) {		// check up, left next
-		if ((board[row][col] & 3) == (board[++row][--col] & 3))
+	while (row < 4 && col > 0) {		// check up, left next
+		if ((board[row][col] & 3) == (board[row + 1][col - 1] & 3)) {
+			row++;
+			col--;
 			count++;
+		}
 		else
 			break;
 	}
