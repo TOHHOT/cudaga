@@ -11,8 +11,21 @@ int gameOver(char board[6][7], char column);
 void printBoard(char board[6][7]);
 
 void print_complete(chromo *pool) {
-	printf("Something Happened, I guess\n");
-	return;
+	FILE *fp;
+	fp = fopen("final_chromo.txt", "w");
+	int i, j;
+	if (!fp) {
+		printf("Error writing chromosome out\n");
+		return;
+	}
+	for (i = 0; i < NUM_INDIVIDUALS; i++) {
+		fprintf(fp, "Individual %d, fitness %d:\n",i+1, pool[i].fitness);
+		for (j = 0; j < CHROMO_LENGTH; j++) {
+			fprintf(fp, "%d %d ", pool[i].bits[j][0],pool[i].bits[j][1]);
+		}
+		fprintf(fp, "\n");
+	}
+	fclose(fp);
 }
 
 void run_ga(chromo *pool) {
