@@ -54,7 +54,7 @@ void run_ga(chromo *pool) {
 			sum = insert(pool, child);
 		}
 
-		for (j = 0; j < NUM_INDIVIDUALS; j++) {
+		/*for (j = 0; j < NUM_INDIVIDUALS; j++) {
 			if (pool[j].fitness == END_FITNESS) {
 				for (k = 0; k < 16; k++)
 					printf("\b");
@@ -62,7 +62,7 @@ void run_ga(chromo *pool) {
 				printf("Finished Early %d\n", pool[j].fitness);
 				return;
 			}
-		}
+		}*/
 	}
 	for (j = 0; j < 16; j++)
 		printf("\b");
@@ -312,14 +312,14 @@ int calc_fitness(chromo *players) {
 		fitness[turn] += WIN_REWARD;
 		fitness[turn ^ 1] -= LOSE_PENALTY;
 
-		printf("%s won:\n", turn ? "Red":"Black");
+		if (DEBUG) printf("%s won:\n", turn ? "Red":"Black");
 	} else if (gamestate == 2) { // It was a tie
 		fitness[0] += TIE_REWARD;
 		fitness[1] += TIE_REWARD;
-		printf("It was a tie:\n");
+		if (DEBUG) printf("It was a tie:\n");
 	}
 
-	printBoard(theBoard);
+	if (DEBUG) printBoard(theBoard);
 
 	players[0].fitness = fitness[0];
 	players[1].fitness = fitness[1];
@@ -357,7 +357,7 @@ int gameOver(char board[6][7], char column) {
 			break;
 	}
 	if (count >= 4) {
-		printf("H Winning move: R%d C%d\n",height, column);
+		if (DEBUG) printf("H Winning move: R%d C%d\n",height, column);
 		return 1;	// This move won
 	}
 
@@ -374,7 +374,7 @@ int gameOver(char board[6][7], char column) {
 				break;
 		}
 		if (count >= 4) {
-			printf("V Winning move: R%d C%d\n",height, column);
+			if (DEBUG) printf("V Winning move: R%d C%d\n",height, column);
 			return 1;	// This move won
 		}
 	}
@@ -405,7 +405,7 @@ int gameOver(char board[6][7], char column) {
 			break;
 	}
 	if (count >= 4) {
-		printf("D/ Winning move: R%d C%d\n",height, column);
+		if (DEBUG) printf("D/ Winning move: R%d C%d\n",height, column);
 		return 1;	// This move won
 	}
 
@@ -434,7 +434,7 @@ int gameOver(char board[6][7], char column) {
 			break;
 	}
 	if (count >= 4) {
-		printf("D\\ Winning move: R%d C%d\n",height, column);
+		if (DEBUG) printf("D\\ Winning move: R%d C%d\n",height, column);
 		return 1;	// This move won
 	}
 
@@ -448,7 +448,7 @@ int gameOver(char board[6][7], char column) {
 		}
 	}
 	if (count) {
-		printf("Tieing move: R%d C%d\n",height, column);
+		if (DEBUG) printf("Tieing move: R%d C%d\n",height, column);
 		return 2;	// It was a tie!
 	}
 	return 0;

@@ -5,9 +5,9 @@
 
 #define NUM_OFFSPRING 2
 
-#define NUM_INDIVIDUALS (NUM_THREADS * NUM_OFFSPRING)
+#define DEBUG 0
 
-#define END_FITNESS 9999
+#define NUM_INDIVIDUALS (NUM_THREADS * NUM_OFFSPRING)
 
 #define LEGAL_MOVE_REWARD 0
 #define ILLEGAL_MOVE_PENALTY 100
@@ -15,19 +15,16 @@
 #define LOSE_PENALTY 5
 #define TIE_REWARD 0
 
-
 #define MAX_GENERATIONS 100000
 
 #define GENE_BYTES 2
 #define CHROMO_LENGTH 2048
 
-#define TARGET_VALUE 42
-
 #define MUTATION_RATE .001
 
 typedef struct {
 	// bits[XX][1] stores next state
-	// 3 LSB of bits[XX][0] stores the move
+	// 3 LSb of bits[XX][0] stores the move
 	unsigned char bits[CHROMO_LENGTH][2];
 	int fitness;
 } chromo;
