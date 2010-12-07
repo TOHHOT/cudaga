@@ -265,7 +265,8 @@ int calc_fitness(chromo *players) {
 	theBoard[0][nextPlay] = (((1 & 7) << 2) | (theBoard[0][nextPlay] & 3));
 	turn ^= 1;
 
-	while (!(gamestate = gameOver(theBoard, nextPlay))) {
+	gamestate = 0;
+	while (!gamestate) {
 
 
 		lowByte = players[turn].bits[((state[turn] << 3) | lastMove[turn ^ 1])][0];
@@ -292,6 +293,8 @@ int calc_fitness(chromo *players) {
 			else
 				// Black played
 				theBoard[height][nextPlay] = (theBoard[height][nextPlay] & ~3) | 1;
+
+			gamestate = gameOver(theBoard, nextPlay);
 		}
 
 		//printBoard(theBoard);
@@ -349,8 +352,10 @@ int gameOver(char board[6][7], char column) {
 		else
 			break;
 	}
-	if (count >= 4)
+	if (count >= 4) {
+		printf("H Winning move: R%d C%d\n",height, column);
 		return 1;	// This move won
+	}
 
 	//Check vertically next
 	count = 1;
@@ -362,8 +367,10 @@ int gameOver(char board[6][7], char column) {
 			else
 				break;
 		}
-		if (count >= 4)
+		if (count >= 4) {
+			printf("V Winning move: R%d C%d\n",height, column);
 			return 1;	// This move won
+		}
 	}
 
 	// Check for diagonal wins here
@@ -385,15 +392,17 @@ int gameOver(char board[6][7], char column) {
 		else
 			break;
 	}
-	if (count >= 4)
+	if (count >= 4) {
+		printf("D/ Winning move: R%d C%d\n",height, column);
 		return 1;	// This move won
+	}
 
 	// Now check for  \  diagonals
 	count = 1;
 	col = column;
 	row = height;
 	while (row > 0 && col < 6) {		// check down,right first
-		if ((board[row][column] & 3) == (board[--row][++col] & 3))
+		if ((board[row][col] & 3) == (board[--row][++col] & 3))
 			count++;
 		else
 			break;
@@ -406,8 +415,10 @@ int gameOver(char board[6][7], char column) {
 		else
 			break;
 	}
-	if (count >= 4)
+	if (count >= 4) {
+		printf("D\\ Winning move: R%d C%d\n",height, column);
 		return 1;	// This move won
+	}
 
 	// Check for a tie (full board)
 	count = 1;
@@ -418,8 +429,10 @@ int gameOver(char board[6][7], char column) {
 			break;
 		}
 	}
-	if (count)
-		return 2;	//it was a tie!
+	if (count) {
+		printf("Tieing move: R%d C%d\n",height, column);
+		return 2;	// It was a tie!
+	}
 	return 0;
 
 }
