@@ -1,10 +1,49 @@
 #include "connect4.h"
 
-int play_game(chromo *players) {
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <math.h>
+
+int main(int argc, char * argv[]) {
+	chromo computer[1];
+	printf("Drop in the chromosome:\n");
+	readPlayer(computer);
+
+	playMe(computer);
+
+
+}
+
+void readPlayer(chromo *player) {
+	int i, r1, r2;
+	FILE *fp;
+
+	fp=fopen("final_chromo.txt","r");
+
+	if(!fp) {
+		    printf("Cannot open file.\n");
+		    exit(1);
+	}
+
+	for (i = 0; i < CHROMO_LENGTH; i++) {
+		fscanf(fp, "%d %d", &r1, &r2);
+			  player->bits[i][0] = r1;
+			  player->bits[i][1] = r2;
+	}
+
+	return;
+}
+
+
+void playMe(chromo *pool) {
+
+	chromo *players = &pool[0];
 
 	char gamestate = 0; // 0 for ongoing, 1 for just won, 2 for tie
 
-	// Player 1 is black, player 2 is red
+	// Player 1 is PC, player 2 is Human
 	char theBoard[6][7] = { { 0 } }; // 0 is empty, 1 is black, 2 is red
 	// The bottom row is row 0, the left column is col 0
 
@@ -16,12 +55,13 @@ int play_game(chromo *players) {
 
 	char lastMove[2] = { 0 };
 
+	int fitness[2] = { 0 };
+
 	char nextPlay;
+	char turn = 0; // 0 for PC, 1 for human
 
 	char lowByte = 0;
 	char hiByte = 0;
-
-	int turn;
 
 	char height = 0;
 	char seq_illegal_turns = 0;
@@ -36,115 +76,91 @@ int play_game(chromo *players) {
 	nextPlay = (int) ((rand() / (float) RAND_MAX) * 7);
 	// This is the first play so don't check board bounds
 	theBoard[0][nextPlay] = 1; // Black plays here
-	lastMove[1] = nextPlay;
+	lastMove[turn] = nextPlay;
 	theBoard[0][nextPlay] = (((1 & 7) << 2) | (theBoard[0][nextPlay] & 3));
+	turn ^= 1;
 
-	while (1) {//!(gamestate = gameOver(theBoard, nextPlay))) {
-		turn = 0;
+	gamestate = 0;
+	printBoard(theBoard);
 
-		lowByte = players[0].bits[((state[0] << 3) | lastMove[1])][0];
-		hiByte = players[0].bits[((state[0] << 3) | lastMove[1])][1];
+	while (!gamestate) {
 
-		state[turn] = hiByte;
-		nextPlay = (7 & lowByte);
+		if (turn == 0) { 	//PC's turn
+			lowByte	= players[turn].bits[((state[turn] << 3) | lastMove[turn ^ 1])][0];
+			hiByte = players[turn].bits[((state[turn] << 3) | lastMove[turn ^ 1])][1];
 
-		// Check for invalid move
-		height = ((theBoard[0][nextPlay] & (7 << 2)) >> 2);
-		lastMove[turn] = nextPlay;
-		if (height > 5) {
-			// Illegal move (nub)
-			printIllegal();
-		} else { // Legal move, record it
-			// Update the bookkeeping
-			theBoard[0][nextPlay] = ((height + 1) << 2) | (theBoard[0][nextPlay] & 3);
-			// Black played
-			theBoard[height][nextPlay] = (theBoard[height][nextPlay] & ~3) | 1;
+			state[turn] = hiByte;
+			nextPlay = (7 & lowByte);
+
+			// Check for invalid move
+			height = ((theBoard[0][nextPlay] & (7 << 2)) >> 2);
+			lastMove[turn] = nextPlay;
+			if (height > 5) {
+				// Illegal move (nub)
+				seq_illegal_turns++;
+				fitness[turn] -= ILLEGAL_MOVE_PENALTY;
+			} else { // Legal move, record it
+				seq_illegal_turns = 0;
+				fitness[turn] += LEGAL_MOVE_REWARD;
+				// Update the bookkeeping
+				theBoard[0][nextPlay] = ((height + 1) << 2)
+						| (theBoard[0][nextPlay] & 3);
+				// Place the token in the board
+				// Black played
+				theBoard[height][nextPlay] = (theBoard[height][nextPlay] & ~3) | 1;
+
+				gamestate = gameOver(theBoard, nextPlay);
+			}
+		} else {	// Human turn
+			printf("Enter move, column 1-7: ");
+			scanf("%d",&nextPlay);
+			nextPlay--;
+			printf("\n");
+
+			// Check for invalid move
+			height = ((theBoard[0][nextPlay] & (7 << 2)) >> 2);
+			lastMove[turn] = nextPlay;
+			if (height > 5) {
+				// Illegal move (nub)
+				printf("Illegal move \n");
+			} else { // Legal move, record it
+				// Update the bookkeeping
+				theBoard[0][nextPlay] = ((height + 1) << 2) | (theBoard[0][nextPlay] & 3);
+				// Place the token in the board
+				// Black played
+				theBoard[height][nextPlay] = (theBoard[height][nextPlay] & ~3) | 2;
+
+				gamestate = gameOver(theBoard, nextPlay);
+			}
 		}
 
+		printBoard(theBoard);
+
+		turn ^= 1; // Change turns
 		if (seq_illegal_turns == 100) {
 			gamestate = 2;
 			break;
 		}
-
-		printBoard(theBoard);
-		if (gamestate = gameOver(theBoard, nextPlay)) break;
-		turn = 1;
-	
-		nextPlay = getNextMove(theBoard);
-
-		// Check for invalid move
-		height = ((theBoard[0][nextPlay] & (7 << 2)) >> 2);	//printBoard(theBoard);
-		
-		// Update the bookkeeping
-		theBoard[0][nextPlay] = ((height + 1) << 2) | (theBoard[0][nextPlay] & 3);
-		// Player Moved
-		theBoard[height][nextPlay] = (theBoard[height][nextPlay] & ~3) | 2;
-		lastMove[turn] = nextPlay;
-
-		printBoard(theBoard);
-		if (gamestate = gameOver(theBoard, nextPlay)) break;
 	}
 
 	if (gamestate == 1) { // Someone just won
-		printf("%s won:\n", turn ? "Red":"Black");
+		fitness[turn] += WIN_REWARD;
+		fitness[turn ^ 1] -= LOSE_PENALTY;
+
+		if (DEBUG)
+			printf("%s won:\n", turn ? "Red" : "Black");
 	} else if (gamestate == 2) { // It was a tie
-		printf("It was a tie:\n");
+		fitness[0] += TIE_REWARD;
+		fitness[1] += TIE_REWARD;
+		if (DEBUG)
+			printf("It was a tie:\n");
 	}
 
-	printBoard(theBoard);
-
-	return 0;
-}
-
-void readPlayer(chromo *player) {
-	int i, r1, r2;
-
-	for (i = 0; i < CHROMO_LENGTH; i++) {
-		scanf("%d %d", &r1, &r2);
-		player->bits[i][0] = r1;
-		player->bits[i][1] = r2;
-	}
+	if (DEBUG)
+		printBoard(theBoard);
 
 	return;
 }
-
-void printPlayer(chromo *player) {
-	int i, r1, r2;
-
-	for (i = 0; i < CHROMO_LENGTH; i++) {
-		printf("%d %d\n", player->bits[i][0], player->bits[i][0]);
-	}
-
-	return;
-}
-
-
-
-void printIllegal(void) {
-	printf("Computer Made an Illegal Move\n");
-
-	return;
-}
-
-char getNextMove(char board[6][7]) {
-	int i = 15;
-
-	printf("Enter your move (columns 0-6): ");
-
-	while (isIllegal(board, i)) scanf("%d", &i);
-
-	return (char)i;
-}
-
-int isIllegal(char board[6][7], int i) {
-	if (i > ((theBoard[0][nextPlay] & (7 << 2)) >> 2)) {
-		printf("Illegal Move\n");
-		return 1;
-	}
-
-	return 0;
-}
-
 
 
 int gameOver(char board[6][7], char column) {
@@ -156,33 +172,43 @@ int gameOver(char board[6][7], char column) {
 	count = 1;
 	col = column;
 	while (col > 0) {
-		if ((board[height][col] & 3) == (board[height][--col] & 3))
+		if ((board[height][col] & 3) == (board[height][col - 1] & 3)) {
+			col--;
 			count++;
+		}
 		else
 			break;
 	}
 	col = column;
-	while (col < 6) {
-		if ((board[height][col] & 3) == (board[height][++col] & 3))
+	while (col < 5) {
+		if ((board[height][col] & 3) == (board[height][col + 1] & 3)) {
+			col++;
 			count++;
+	}
 		else
 			break;
 	}
-	if (count >= 4)
+	if (count >= 4) {
+		if (DEBUG) printf("H Winning move: R%d C%d\n",height, column);
 		return 1;	// This move won
+	}
 
 	//Check vertically next
 	count = 1;
 	row = height;
 	if (height >= 3) {	// Need at least 4 checkers in this column
 		while (row > 0) {
-			if ((board[row][column] & 3) == (board[--row][column] & 3))
+			if ((board[row][column] & 3) == (board[row - 1][column] & 3)) {
+				row--;
 				count++;
+			}
 			else
 				break;
 		}
-		if (count >= 4)
+		if (count >= 4) {
+			if (DEBUG) printf("V Winning move: R%d C%d\n",height, column);
 			return 1;	// This move won
+		}
 	}
 
 	// Check for diagonal wins here
@@ -191,42 +217,58 @@ int gameOver(char board[6][7], char column) {
 	col = column;
 	row = height;
 	while (row > 0 && col > 0) {		// check down,left first
-		if ((board[row][col] & 3) == (board[--row][--col] & 3))
+		if ((board[row][col] & 3) == (board[row - 1][col - 1] & 3)) {
+			row--;
+			col--;
 			count++;
+		}
 		else
 			break;
 	}
 	col = column;
 	row = height;
-	while (row < 5 && col < 6) {		// check up, right next
-		if ((board[row][col] & 3) == (board[++row][++col] & 3))
+	while (row < 4 && col < 5) {		// check up, right next
+		if ((board[row][col] & 3) == (board[row + 1][col + 1] & 3)) {
+			row++;
+			col++;
 			count++;
+		}
 		else
 			break;
 	}
-	if (count >= 4)
+	if (count >= 4) {
+		if (DEBUG) printf("D/ Winning move: R%d C%d\n",height, column);
 		return 1;	// This move won
+	}
 
 	// Now check for  \  diagonals
 	count = 1;
 	col = column;
 	row = height;
-	while (row > 0 && col < 6) {		// check down,right first
-		if ((board[row][column] & 3) == (board[--row][++col] & 3))
+	while (row > 0 && col < 5) {		// check down,right first
+		if ((board[row][col] & 3) == (board[row - 1][col + 1] & 3)) {
+			row--;
+			col++;
 			count++;
+		}
 		else
 			break;
 	}
 	col = column;
 	row = height;
-	while (row < 5 && col > 0) {		// check up, left next
-		if ((board[row][col] & 3) == (board[++row][--col] & 3))
+	while (row < 4 && col > 0) {		// check up, left next
+		if ((board[row][col] & 3) == (board[row + 1][col - 1] & 3)) {
+			row++;
+			col--;
 			count++;
+		}
 		else
 			break;
 	}
-	if (count >= 4)
+	if (count >= 4) {
+		if (DEBUG) printf("D\\ Winning move: R%d C%d\n",height, column);
 		return 1;	// This move won
+	}
 
 	// Check for a tie (full board)
 	count = 1;
@@ -237,12 +279,13 @@ int gameOver(char board[6][7], char column) {
 			break;
 		}
 	}
-	if (count)
-		return 2;	//it was a tie!
+	if (count) {
+		if (DEBUG) printf("Tieing move: R%d C%d\n",height, column);
+		return 2;	// It was a tie!
+	}
 	return 0;
 
 }
-
 
 
 void printBoard(char board[6][7]) {

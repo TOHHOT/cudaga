@@ -6,10 +6,6 @@
 
 #include "c_ga.h"
 
-void gaQuickSort(chromo *arr, int elements);
-int gameOver(char board[6][7], char column);
-void printBoard(char board[6][7]);
-
 void print_complete(chromo *pool) {
 	FILE *fp;
 	fp = fopen("final_chromo.txt", "w");
@@ -18,14 +14,148 @@ void print_complete(chromo *pool) {
 		printf("Error writing chromosome out\n");
 		return;
 	}
-	for (i = 0; i < NUM_INDIVIDUALS; i++) {
-		fprintf(fp, "Individual %d, fitness %d:\n",i+1, pool[i].fitness);
+	//for (i = 0; i < NUM_INDIVIDUALS; i++) {
+	//	fprintf(fp, "Individual %d, fitness %d:\n",i+1, pool[i].fitness);
+		i = 0;
 		for (j = 0; j < CHROMO_LENGTH; j++) {
-			fprintf(fp, "%d %d ", pool[i].bits[j][0],pool[i].bits[j][1]);
+			fprintf(fp, "%d %d \n", pool[i].bits[j][0],pool[i].bits[j][1]);
 		}
 		fprintf(fp, "\n");
-	}
+	//}
 	fclose(fp);
+
+	printf("\nComplete!\n");
+
+	// Play against the computer:
+
+	playMe(pool);
+
+}
+
+void playMe(chromo *pool) {
+	gaQuickSort(pool, NUM_INDIVIDUALS);
+
+	chromo *players = &pool[0];
+
+	char gamestate = 0; // 0 for ongoing, 1 for just won, 2 for tie
+
+	// Player 1 is PC, player 2 is Human
+	char theBoard[6][7] = { { 0 } }; // 0 is empty, 1 is black, 2 is red
+	// The bottom row is row 0, the left column is col 0
+
+	// The bottom cell in each column contains, in bits 4-2, the index
+	// of the bottom most empty cell in that column (therefore if bits
+	// 4-2 contain 6, the column is FULL
+
+	char state[2] = { 0 };
+
+	char lastMove[2] = { 0 };
+
+	int fitness[2] = { 0 };
+
+	char nextPlay;
+	char turn = 0; // 0 for PC, 1 for human
+
+	char lowByte = 0;
+	char hiByte = 0;
+
+	char height = 0;
+	char seq_illegal_turns = 0;
+
+	if (!players)
+		return -1;
+
+	// This function overwrites players' previous
+	// fitness, if any
+
+	// First player one must go randomly
+	nextPlay = (int) ((rand() / (float) RAND_MAX) * 7);
+	// This is the first play so don't check board bounds
+	theBoard[0][nextPlay] = 1; // Black plays here
+	lastMove[turn] = nextPlay;
+	theBoard[0][nextPlay] = (((1 & 7) << 2) | (theBoard[0][nextPlay] & 3));
+	turn ^= 1;
+
+	gamestate = 0;
+	printBoard(theBoard);
+
+	while (!gamestate) {
+
+		if (turn == 0) { 	//PC's turn
+			lowByte	= players[turn].bits[((state[turn] << 3) | lastMove[turn ^ 1])][0];
+			hiByte = players[turn].bits[((state[turn] << 3) | lastMove[turn ^ 1])][1];
+
+			state[turn] = hiByte;
+			nextPlay = (7 & lowByte);
+
+			// Check for invalid move
+			height = ((theBoard[0][nextPlay] & (7 << 2)) >> 2);
+			lastMove[turn] = nextPlay;
+			if (height > 5) {
+				// Illegal move (nub)
+				seq_illegal_turns++;
+				fitness[turn] -= ILLEGAL_MOVE_PENALTY;
+			} else { // Legal move, record it
+				seq_illegal_turns = 0;
+				fitness[turn] += LEGAL_MOVE_REWARD;
+				// Update the bookkeeping
+				theBoard[0][nextPlay] = ((height + 1) << 2)
+						| (theBoard[0][nextPlay] & 3);
+				// Place the token in the board
+				// Black played
+				theBoard[height][nextPlay] = (theBoard[height][nextPlay] & ~3) | 1;
+
+				gamestate = gameOver(theBoard, nextPlay);
+			}
+		} else {	// Human turn
+			printf("Enter move, column 1-7: ");
+			scanf("%d",&nextPlay);
+			nextPlay--;
+			printf("\n");
+
+			// Check for invalid move
+			height = ((theBoard[0][nextPlay] & (7 << 2)) >> 2);
+			lastMove[turn] = nextPlay;
+			if (height > 5) {
+				// Illegal move (nub)
+				printf("Illegal move \n");
+			} else { // Legal move, record it
+				// Update the bookkeeping
+				theBoard[0][nextPlay] = ((height + 1) << 2) | (theBoard[0][nextPlay] & 3);
+				// Place the token in the board
+				// Black played
+				theBoard[height][nextPlay] = (theBoard[height][nextPlay] & ~3) | 2;
+
+				gamestate = gameOver(theBoard, nextPlay);
+			}
+		}
+
+		printBoard(theBoard);
+
+		turn ^= 1; // Change turns
+		if (seq_illegal_turns == 100) {
+			gamestate = 2;
+			break;
+		}
+	}
+
+	if (gamestate == 1) { // Someone just won
+		fitness[turn] += WIN_REWARD;
+		fitness[turn ^ 1] -= LOSE_PENALTY;
+
+		if (DEBUG)
+			printf("%s won:\n", turn ? "Red" : "Black");
+	} else if (gamestate == 2) { // It was a tie
+		fitness[0] += TIE_REWARD;
+		fitness[1] += TIE_REWARD;
+		if (DEBUG)
+			printf("It was a tie:\n");
+	}
+
+	if (DEBUG)
+		printBoard(theBoard);
+
+	return;
 }
 
 void run_ga(chromo *pool) {

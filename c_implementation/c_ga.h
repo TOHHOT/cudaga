@@ -45,5 +45,12 @@ int init_individual(chromo *ind);
 
 int calc_fitness(chromo *players);
 
+void gaQuickSort(chromo *arr, int elements);
+
+int gameOver(char board[6][7], char column);
+
+void printBoard(char board[6][7]);
+
+void playMe(chromo *pool);
 
 #endif //__C_GA_H__
