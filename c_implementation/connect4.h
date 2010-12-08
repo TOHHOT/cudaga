@@ -36,5 +36,7 @@ void printBoard(char board[6][7]);
 
 void playMe(chromo *pool);
 
+int playPC(chromo *players);
+
 
 #endif //__CONNECT4_H__
