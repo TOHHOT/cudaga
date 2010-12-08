@@ -7,158 +7,30 @@
 #include "c_ga.h"
 
 void print_complete(chromo *pool) {
+	static int id = 0;
+	char fileName[20];
 	FILE *fp;
-	fp = fopen("final_chromo.txt", "w");
+	sprintf(fileName, "output/%dpercent",id++);
+	fp = fopen(fileName, "w");
 	int i, j;
 	if (!fp) {
 		printf("Error writing chromosome out\n");
 		return;
 	}
-	//for (i = 0; i < NUM_INDIVIDUALS; i++) {
-	//	fprintf(fp, "Individual %d, fitness %d:\n",i+1, pool[i].fitness);
-		i = 0;
-		for (j = 0; j < CHROMO_LENGTH; j++) {
-			fprintf(fp, "%d %d \n", pool[i].bits[j][0],pool[i].bits[j][1]);
-		}
-		fprintf(fp, "\n");
-	//}
+	i = 0;
+	for (j = 0; j < CHROMO_LENGTH; j++) {
+		fprintf(fp, "%d %d \n", pool[i].bits[j][0],pool[i].bits[j][1]);
+	}
+	fprintf(fp, "\n");
 	fclose(fp);
 
-	printf("\nComplete!\n");
-
-	// Play against the computer:
-
-	//playMe(pool);
+	//printf("\nComplete!\n");
 
 }
 
-void playMe(chromo *pool) {
-
-	chromo *players = &pool[0];
-
-	char gamestate = 0; // 0 for ongoing, 1 for just won, 2 for tie
-
-	// Player 1 is PC, player 2 is Human
-	char theBoard[6][7] = { { 0 } }; // 0 is empty, 1 is black, 2 is red
-	// The bottom row is row 0, the left column is col 0
-
-	// The bottom cell in each column contains, in bits 4-2, the index
-	// of the bottom most empty cell in that column (therefore if bits
-	// 4-2 contain 6, the column is FULL
-
-	char state[2] = { 0 };
-
-	char lastMove[2] = { 0 };
-
-	int fitness[2] = { 0 };
-
-	char nextPlay;
-	char turn = 0; // 0 for PC, 1 for human
-
-	char lowByte = 0;
-	char hiByte = 0;
-
-	char height = 0;
-	char seq_illegal_turns = 0;
-
-	if (!players)
-		return -1;
-
-	// This function overwrites players' previous
-	// fitness, if any
-
-	// First player one must go randomly
-	nextPlay = (int) ((rand() / (float) RAND_MAX) * 7);
-	// This is the first play so don't check board bounds
-	theBoard[0][nextPlay] = 1; // Black plays here
-	lastMove[turn] = nextPlay;
-	theBoard[0][nextPlay] = (((1 & 7) << 2) | (theBoard[0][nextPlay] & 3));
-	turn ^= 1;
-
-	gamestate = 0;
-	printBoard(theBoard);
-
-	while (!gamestate) {
-
-		if (turn == 0) { 	//PC's turn
-			lowByte	= players[turn].bits[((state[turn] << 3) | lastMove[turn ^ 1])][0];
-			hiByte = players[turn].bits[((state[turn] << 3) | lastMove[turn ^ 1])][1];
-
-			state[turn] = hiByte;
-			nextPlay = (7 & lowByte);
-
-			// Check for invalid move
-			height = ((theBoard[0][nextPlay] & (7 << 2)) >> 2);
-			lastMove[turn] = nextPlay;
-			if (height > 5) {
-				// Illegal move (nub)
-				seq_illegal_turns++;
-				fitness[turn] -= ILLEGAL_MOVE_PENALTY;
-			} else { // Legal move, record it
-				seq_illegal_turns = 0;
-				fitness[turn] += LEGAL_MOVE_REWARD;
-				// Update the bookkeeping
-				theBoard[0][nextPlay] = ((height + 1) << 2)
-						| (theBoard[0][nextPlay] & 3);
-				// Place the token in the board
-				// Black played
-				theBoard[height][nextPlay] = (theBoard[height][nextPlay] & ~3) | 1;
-
-				gamestate = gameOver(theBoard, nextPlay);
-			}
-		} else {	// Human turn
-			printf("Enter move, column 1-7: ");
-			scanf("%d",&nextPlay);
-			nextPlay--;
-			printf("\n");
-
-			// Check for invalid move
-			height = ((theBoard[0][nextPlay] & (7 << 2)) >> 2);
-			lastMove[turn] = nextPlay;
-			if (height > 5) {
-				// Illegal move (nub)
-				printf("Illegal move \n");
-			} else { // Legal move, record it
-				// Update the bookkeeping
-				theBoard[0][nextPlay] = ((height + 1) << 2) | (theBoard[0][nextPlay] & 3);
-				// Place the token in the board
-				// Black played
-				theBoard[height][nextPlay] = (theBoard[height][nextPlay] & ~3) | 2;
-
-				gamestate = gameOver(theBoard, nextPlay);
-			}
-		}
-
-		printBoard(theBoard);
-
-		turn ^= 1; // Change turns
-		if (seq_illegal_turns == 100) {
-			gamestate = 2;
-			break;
-		}
-	}
-
-	if (gamestate == 1) { // Someone just won
-		fitness[turn ^ 1] += WIN_REWARD;
-		fitness[turn] -= LOSE_PENALTY;
-
-		if (DEBUG)
-			printf("%s won:\n", turn ? "Red" : "Black");
-	} else if (gamestate == 2) { // It was a tie
-		fitness[0] += TIE_REWARD;
-		fitness[1] += TIE_REWARD;
-		if (DEBUG)
-			printf("It was a tie:\n");
-	}
-
-	if (DEBUG)
-		printBoard(theBoard);
-
-	return;
-}
 
 void run_ga(chromo *pool) {
-	int i, j, k;
+	int i, j, k, l;
 	int sum;
 	double complete = 0;
 
@@ -170,10 +42,10 @@ void run_ga(chromo *pool) {
 		init_individual(pool + i);
 	}
 	for (i = 0; i < NUM_INDIVIDUALS; i+=2) {
-		sum += calc_fitness(pool + i);
+		sum += calc_fitness(pool + i, pool + i + 1);
 	}
 	if (NUM_INDIVIDUALS & 0x01)
-		calc_fitness(pool + NUM_INDIVIDUALS - 1);
+		calc_fitness(pool + NUM_INDIVIDUALS - 1, pool + NUM_INDIVIDUALS);
 
 
 	printf("               ");
@@ -186,29 +58,18 @@ void run_ga(chromo *pool) {
 			printf("%3.1lf%% Complete ", complete * 100);
 			fflush(stdout);
 			complete += .01;
+			print_complete(pool);
 		}
 		for (j = 0; j < NUM_THREADS; j++) {
 			roulette(pool, parents, sum);
 			for (k = 0; k < NUM_OFFSPRING; k++) {
 				create_individual(parents, &child[k]);
-				if (k & 0x01) {
-					calc_fitness(&child[k - 1]);
-					calc_fitness(&child[k - 1]);
-					calc_fitness(&child[k - 1]);
+				for (l = k + 1; l < NUM_OFFSPRING; l++) {
+					calc_fitness(&child[k], &child[l]);
 				}
 			}
 			sum = insert(pool, child);
 		}
-
-		/*for (j = 0; j < NUM_INDIVIDUALS; j++) {
-			if (pool[j].fitness == END_FITNESS) {
-				for (k = 0; k < 16; k++)
-					printf("\b");
-				printf("%lf%% Complete\n", 100.0);
-				printf("Finished Early %d\n", pool[j].fitness);
-				return;
-			}
-		}*/
 	}
 	for (j = 0; j < 16; j++)
 		printf("\b");
@@ -370,8 +231,11 @@ int init_individual(chromo *ind) {
 	return 0;
 }
 
-int calc_fitness(chromo *players) {
+int calc_fitness(chromo *player1, chromo *player2) {
 
+	chromo *players[2];
+	players[0] = player1;
+	players[1] = player2;
 	char gamestate = 0; // 0 for ongoing, 1 for just won, 2 for tie
 
 	// Player 1 is black, player 2 is red
@@ -415,8 +279,8 @@ int calc_fitness(chromo *players) {
 	while (!gamestate) {
 
 
-		lowByte = players[turn].bits[((state[turn] << 3) | lastMove[turn ^ 1])][0];
-		hiByte = players[turn].bits[((state[turn] << 3) | lastMove[turn ^ 1])][1];
+		lowByte = players[turn]->bits[((state[turn] << 3) | lastMove[turn ^ 1])][0];
+		hiByte = players[turn]->bits[((state[turn] << 3) | lastMove[turn ^ 1])][1];
 
 		state[turn] = hiByte;
 		nextPlay = (7 & lowByte);
@@ -453,6 +317,7 @@ int calc_fitness(chromo *players) {
 	}
 
 
+	turn ^= 1;		// Change the turn back
 
 	if (gamestate == 1) { // Someone just won
 		fitness[turn] += WIN_REWARD;
@@ -467,10 +332,10 @@ int calc_fitness(chromo *players) {
 
 	if (DEBUG) printBoard(theBoard);
 
-	players[0].fitness += fitness[0];
-	if (players[0].fitness < 1) players[0].fitness = 1;
-	players[1].fitness += fitness[1];
-	if (players[1].fitness < 1) players[1].fitness = 1;
+	players[0]->fitness += fitness[0];
+	if (players[0]->fitness < 1) players[0]->fitness = 1;
+	players[1]->fitness += fitness[1];
+	if (players[1]->fitness < 1) players[1]->fitness = 1;
 
 	return 0;
 }

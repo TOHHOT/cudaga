@@ -1,9 +1,9 @@
 #ifndef __C_GA_H__
 #define __C_GA_H__
 
-#define NUM_THREADS 32
+#define NUM_THREADS 1
 
-#define NUM_OFFSPRING 2
+#define NUM_OFFSPRING 64
 
 #define DEBUG 0
 
@@ -15,7 +15,7 @@
 #define LOSE_PENALTY 5
 #define TIE_REWARD 0
 
-#define MAX_GENERATIONS 1000
+#define MAX_GENERATIONS 10000
 
 #define GENE_BYTES 2
 #define CHROMO_LENGTH 2048
@@ -43,14 +43,12 @@ int create_individual(chromo *parents, chromo *child);
 
 int init_individual(chromo *ind);
 
-int calc_fitness(chromo *players);
+int calc_fitness(chromo *player1, chromo *player2);
 
 void gaQuickSort(chromo *arr, int elements);
 
 int gameOver(char board[6][7], char column);
 
 void printBoard(char board[6][7]);
-
-void playMe(chromo *pool);
 
 #endif //__C_GA_H__

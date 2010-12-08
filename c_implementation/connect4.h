@@ -28,7 +28,7 @@ typedef struct {
 	int fitness;
 } chromo;
 
-void readPlayer(chromo *player);
+void readPlayer(chromo *player, char *filename);
 
 int gameOver(char board[6][7], char column);
 

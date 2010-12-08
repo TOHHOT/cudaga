@@ -10,19 +10,23 @@
 int main(int argc, char * argv[]) {
 	chromo computer[1];
 	srand(time(NULL));
-	printf("Drop in the chromosome:\n");
-	readPlayer(computer);
+	if (argc != 2) {
+		printf("Usage: %s filename\n", argv[0]);
+		exit(0);
+	}
+	readPlayer(computer, argv[1]);
 
 	playMe(computer);
 
 
 }
 
-void readPlayer(chromo *player) {
+void readPlayer(chromo *player, char *filename) {
 	int i, r1, r2;
 	FILE *fp;
 
-	fp=fopen("final_chromo.txt","r");
+
+	fp=fopen(filename,"r");
 
 	if(!fp) {
 		    printf("Cannot open file.\n");
