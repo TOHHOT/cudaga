@@ -21,6 +21,7 @@ __global__ void run_ga(mutex *lock, chromo *pool, unsigned *seeds)
 
 	seeds[th_id] = 42;
 
+/*
 	if (th_id == 0) {
 		for (i = 0; i < NUM_INDIVIDUALS; i++) {
 			//init_individual(&pool[i], &seed);
@@ -36,19 +37,22 @@ __global__ void run_ga(mutex *lock, chromo *pool, unsigned *seeds)
 		}
 	}
 	__syncthreads();
+*/
 	retVal = 1;
 	while (retVal) {
 		if (0 == mutex_lock()) {
 			for (i = 0; i < NUM_OFFSPRING; i++) {
 				cpy_ind(&locals[i], &pool[i + th_id * NUM_OFFSPRING]);
 			}
+			seeds[th_id] = waitCount;
 			mutex_unlock();
 			retVal = 0;
 		} else {
-			waitCount++;
+			for (j = 0; j < 5000 * grand(&seed); j++) {
+				waitCount++;
+			}
 		}
 	}
-	seeds[th_id] = 1;
 	for (i = 0; i < (NUM_OFFSPRING - 1); i += 2) {
 		calc_fitness(&locals[i], &seed);
 		calc_fitness(&locals[i], &seed);
@@ -66,25 +70,28 @@ __global__ void run_ga(mutex *lock, chromo *pool, unsigned *seeds)
 		while (retVal) {
 			if (0 == mutex_lock()) {
 				insert_roulette(lock, pool, locals, parents, &seed);
-		
+		/*
 				if (lock[1]) {
-					seeds[th_id] = seed;
+					seeds[th_id] = 43;
 					mutex_unlock();
 					return;
 				}
+				
 				for (j = 0; j < NUM_OFFSPRING; j++) {
 					if (locals[j].fitness >= END_FITNESS) {
 						lock[1] = 1;
-						seeds[th_id] = seed;
+						seeds[th_id] = 44;
 						mutex_unlock();
 						return;
 					}
-				}
+				}*/
 				seeds[th_id] = waitCount;
 				mutex_unlock();
 				retVal = 0;
 			} else {
-				waitCount++;
+				for (j = 0; j < 5000 * grand(&seed); j++) {
+					waitCount++;
+				}
 			}
 		}
 
@@ -102,7 +109,7 @@ __global__ void run_ga(mutex *lock, chromo *pool, unsigned *seeds)
 			calc_fitness(&locals[NUM_OFFSPRING - 2], &seed);
 		}
 	}
-	seeds[th_id] = seed;
+	seeds[th_id] = i;
 
 	return;
 }
@@ -119,7 +126,7 @@ __global__ void init_ga(chromo *pool, unsigned *seeds)
 			calc_fitness(&pool[i - 1], &seed);
 		}
 	}
-	seeds[0] = seed;
+	seeds[0] = 14;
 }
 
 __device__ int insert_roulette(mutex *lock, chromo *pool, chromo *locals, 

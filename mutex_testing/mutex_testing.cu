@@ -31,7 +31,8 @@ __device__ int lock(mutex *block)
 
 __device__ int unlock(mutex *block)
 {
-	return atomicCAS(block, 1, 0);
+	//return atomicCAS(block, 1, 0);
+	block[0] = 0;
 }
 
 __device__ int mutex_unlock(void)

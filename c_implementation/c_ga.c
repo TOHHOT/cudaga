@@ -266,6 +266,8 @@ int calc_fitness(chromo *player1, chromo *player2) {
 
 	// This function overwrites players' previous
 	// fitness, if any
+	
+	turn = rand() > .5;
 
 	// First player one must go randomly
 	nextPlay = (int) ((rand() / (float) RAND_MAX) * 7);

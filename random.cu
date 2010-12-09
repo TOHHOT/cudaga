@@ -20,6 +20,7 @@ __device__ float grand(unsigned int *seed)
 
     return (((float)*seed) / (4294967295.0f));
 }
+
 // This function allocates memory for seeds on the gpu, generates them,
 // and copies them over.
 unsigned int *gen_seeds(int num_threads)
@@ -47,7 +48,7 @@ unsigned int *gen_seeds(int num_threads)
         s_h[i] = rand();
     }
 
-    cudaMemcpy(s_d, s_h, num_threads * sizeof(unsigned int), cudaMemcpyHostToDevice);
+    printf("memcpy %d\n", cudaMemcpy(s_d, s_h, num_threads * sizeof(unsigned int), cudaMemcpyHostToDevice));
 
     free(s_h);
 

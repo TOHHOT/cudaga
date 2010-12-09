@@ -7,7 +7,10 @@
 #include <math.h>
 #include <time.h>
 
-int main(int argc, char * argv[]) {
+int won = 0;
+
+int main(int argc, unsigned char * argv[]) {
+	int i;
 	chromo computer[2];
 	srand(time(NULL));
 	if (argc != 2 && argc != 3) {
@@ -18,7 +21,10 @@ int main(int argc, char * argv[]) {
 	readPlayer(computer, argv[1]);
 	if (argc == 3) {
 		readPlayer(&computer[1], argv[2]);
-		playPC(computer);
+		won = 0;
+		for (i = 0; i < 1000000; i++) 
+			playPC(computer);
+		printf("%d\n", won);
 		return;
 	}
 
@@ -27,7 +33,6 @@ int main(int argc, char * argv[]) {
 }
 
 int playPC(chromo *players) {
-
 	char gamestate = 0; // 0 for ongoing, 1 for just won, 2 for tie
 
 	// Player 1 is black, player 2 is red
@@ -112,22 +117,23 @@ int playPC(chromo *players) {
 	turn ^= 1;		// Change the turn back
 
 	if (gamestate == 1) { // Someone just won
+		won += turn;
 		fitness[turn] += WIN_REWARD;
 		fitness[turn ^ 1] -= LOSE_PENALTY;
 
-		printf("%s won:\n", turn ? "Red":"Black");
+//		printf("%s won:\n", turn ? "Red":"Black");
 	} else if (gamestate == 2) { // It was a tie
 		fitness[0] += TIE_REWARD;
 		fitness[1] += TIE_REWARD;
-		 printf("It was a tie:\n");
+//		 printf("It was a tie:\n");
 	}
 
-	printBoard(theBoard);
+	//printBoard(theBoard);
 
 	return 0;
 }
 
-void readPlayer(chromo *player, char *filename) {
+void readPlayer(chromo *player, unsigned char *filename) {
 	int i, r1, r2;
 	FILE *fp;
 
@@ -153,30 +159,30 @@ void playMe(chromo *pool) {
 
 	chromo *players = &pool[0];
 
-	char gamestate = 0; // 0 for ongoing, 1 for just won, 2 for tie
+	unsigned char gamestate = 0; // 0 for ongoing, 1 for just won, 2 for tie
 
 	// Player 1 is PC, player 2 is Human
-	char theBoard[6][7] = { { 0 } }; // 0 is empty, 1 is black, 2 is red
+	unsigned char theBoard[6][7] = { { 0 } }; // 0 is empty, 1 is black, 2 is red
 	// The bottom row is row 0, the left column is col 0
 
 	// The bottom cell in each column contains, in bits 4-2, the index
 	// of the bottom most empty cell in that column (therefore if bits
 	// 4-2 contain 6, the column is FULL
 
-	char state[2] = { 0 };
+	unsigned char state[2] = { 0 };
 
-	char lastMove[2] = { 0 };
+	unsigned char lastMove[2] = { 0 };
 
 	int fitness[2] = { 0 };
 
-	char nextPlay;
-	char turn = 0; // 0 for PC, 1 for human
+	unsigned char nextPlay;
+	unsigned char turn = 0; // 0 for PC, 1 for human
 
-	char lowByte = 0;
-	char hiByte = 0;
+	unsigned char lowByte = 0;
+	unsigned char hiByte = 0;
 
-	char height = 0;
-	char seq_illegal_turns = 0;
+	unsigned char height = 0;
+	unsigned char seq_illegal_turns = 0;
 
 	if (!players)
 		return -1;
@@ -275,10 +281,10 @@ void playMe(chromo *pool) {
 }
 
 
-int gameOver(char board[6][7], char column) {
-	char col, row;
-	char count;
-	char height = ((board[0][column] & (7 << 2)) >> 2) - 1;
+int gameOver(unsigned char board[6][7], unsigned char column) {
+	unsigned char col, row;
+	unsigned char count;
+	unsigned char height = ((board[0][column] & (7 << 2)) >> 2) - 1;
 
 	// Check horizontally first
 	count = 1;
@@ -301,7 +307,7 @@ int gameOver(char board[6][7], char column) {
 			break;
 	}
 	if (count >= 4) {
-		 printf("H Winning move: R%d C%d\n",height, column);
+		 //printf("H Winning move: R%d C%d\n",height, column);
 		return 1;	// This move won
 	}
 
@@ -318,7 +324,7 @@ int gameOver(char board[6][7], char column) {
 				break;
 		}
 		if (count >= 4) {
-			 printf("V Winning move: R%d C%d\n",height, column);
+			 //printf("V Winning move: R%d C%d\n",height, column);
 			return 1;	// This move won
 		}
 	}
@@ -349,7 +355,7 @@ int gameOver(char board[6][7], char column) {
 			break;
 	}
 	if (count >= 4) {
-		 printf("D/ Winning move: R%d C%d\n",height, column);
+		 //printf("D/ Winning move: R%d C%d\n",height, column);
 		return 1;	// This move won
 	}
 
@@ -378,7 +384,7 @@ int gameOver(char board[6][7], char column) {
 			break;
 	}
 	if (count >= 4) {
-		 printf("D\\ Winning move: R%d C%d\n",height, column);
+		 //printf("D\\ Winning move: R%d C%d\n",height, column);
 		return 1;	// This move won
 	}
 
@@ -400,7 +406,7 @@ int gameOver(char board[6][7], char column) {
 }
 
 
-void printBoard(char board[6][7]) {
+void printBoard(unsigned char board[6][7]) {
     int row, col;
     for (row = 5; row >= 0; row--) {
         printf("|");

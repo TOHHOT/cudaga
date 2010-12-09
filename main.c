@@ -16,6 +16,7 @@ int main(int argc, char * argv[])
     chromo pool[NUM_INDIVIDUALS];
 	chromo *d_pool;
 	unsigned *seeds;
+	unsigned h_seeds[NUM_THREADS] = {0};
 	int i,j;
 	double complete = 0;
 	mutex *lock;
@@ -39,6 +40,7 @@ int main(int argc, char * argv[])
 		return -2;
 	}
 
+
 	cudaMalloc((void **) &lock, 2 * sizeof(int));
 	if (!lock) {
 		printf("Unable to allocate memory for lock\n");
@@ -55,7 +57,7 @@ int main(int argc, char * argv[])
 
 
     printf("               ");
-	for (i = 0; i < 10000; i++) {
+	for (i = 0; i < 1; i++) {
         if (i > (complete * 1000)) {
             for (j = 0; j < 16; j++) printf("\b");
             if (complete < .1) printf(" ");
@@ -77,6 +79,11 @@ int main(int argc, char * argv[])
 	cudaMemcpy(pool, d_pool, NUM_INDIVIDUALS * sizeof(chromo), cudaMemcpyDeviceToHost);
 	printf("Memcpy Complete\n");
 	cudaThreadSynchronize();
+	printf("%u\n",cudaMemcpy(h_seeds, seeds, NUM_THREADS * sizeof(unsigned), cudaMemcpyDeviceToHost));
+
+	for (i = 0; i < NUM_THREADS; i++) {
+		//printf("%u\n", h_seeds[i]);
+	}
 
     print_complete(pool);
 	printf("Printing Complete\n");
